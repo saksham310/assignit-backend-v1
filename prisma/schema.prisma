@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,13 +7,69 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User{
-  id Int @id @default(autoincrement())
-  email String @unique
-  password String 
-  username String @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  otp String?
+// Define Enum for Workspace Roles
+enum Workspace_Roles {
+  Admin
+  Owner
+  Member
+}
+
+enum Project_Roles {
+  Project_Manager
+  Team_Lead
+  Developer
+  QA
+  Designer
+  Database
+  Unassigned
+}
+
+model User {
+  id         Int              @id @default(autoincrement())
+  email      String           @unique
+  password   String
+  username   String           @unique
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  otp        String?
   otp_expiry DateTime?
+  workspaces Workspace_User[] @relation("WorkspaceUser")
+  projects   Project_User[]   @relation("ProjectUser")
+}
+
+model Workspace {
+  id        Int              @id @default(autoincrement())
+  name      String
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  users     Workspace_User[] @relation("WorkspaceUser")
+  projects  Project[]        @relation("WorkspaceProjects")
+}
+
+model Workspace_User {
+  id           Int             @id @default(autoincrement())
+  user         User            @relation("WorkspaceUser", fields: [user_id], references: [id])
+  user_id      Int
+  workspace    Workspace       @relation("WorkspaceUser", fields: [workspace_id], references: [id])
+  workspace_id Int
+  role         Workspace_Roles @default(Member)
+}
+
+model Project {
+  id           Int            @id @default(autoincrement())
+  name         String
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  users        Project_User[] @relation("ProjectUser")
+  workspace    Workspace      @relation("WorkspaceProjects", fields: [workspace_id], references: [id])
+  workspace_id Int
+}
+
+model Project_User {
+  id         Int           @id @default(autoincrement())
+  user       User          @relation("ProjectUser", fields: [user_id], references: [id])
+  user_id    Int
+  project    Project       @relation("ProjectUser", fields: [project_id], references: [id])
+  project_id Int
+  role       Project_Roles @default(Unassigned)
 }
