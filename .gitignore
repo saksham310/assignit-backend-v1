@@ -1,4 +1,16 @@
-node_modules
+# Node.js dependencies
+node_modules/
+
+# Prisma generated client and related files
+.prisma/
+prisma/generated/
+
 # Keep environment variables out of version control
 .env
+
+# IDE specific files
 .idea/
+
+# Logs
+logs/
+*.log
