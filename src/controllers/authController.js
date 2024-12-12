@@ -59,14 +59,14 @@ export const loginUser=async(req,res)=>{
             }
         })
         if(!user){
-            return res.status(500);
+            return res.status(401).json({ message: 'Invalid credentials' });
         }
         const passwordValid=bcrypt.compareSync(password, user.password);
         if(!passwordValid){
             return res.status(401).json({message:'Invalid credentials'})
         }
         const token=jwt.sign({id:user.id},process.env.JWT_SECRET,{ expiresIn: '1d' });
-        res.status(200).json({
+        return res.status(200).json({
             token, user: {
                 id: user.id,
                 username: user.username,
@@ -75,6 +75,6 @@ export const loginUser=async(req,res)=>{
         })
     }catch (err) {
         console.log(err.message);
-        res.sendStatus(503);
+       return res.sendStatus(503);
     }
 }
