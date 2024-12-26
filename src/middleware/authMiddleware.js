@@ -2,7 +2,6 @@ import jwt from "jsonwebtoken";
 
 const authMiddleware = (req, res, next) => {
     const token = req.headers['authorization'];
-    console.log("Test hehe",token);
     if (!token) {
         return res.sendStatus(401).json({ message: 'Unauthorized, token missing' });
     }
