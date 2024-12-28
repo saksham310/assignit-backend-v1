@@ -24,7 +24,27 @@ const newWorkspace=await prisma.workspace.create({
    return  res.status(503).json({message:'Failed to Create the Workspace'});
 }
 }
-
+export const updateWorkspace=async (req,res)=>{
+    const {name}=req.body;
+    const {workspaceId} = req.params;
+    if(!name){
+        return res.status(400).json({message:'Please provide a workspace name'});
+    }
+    try{
+        const updatedWorkspace=await prisma.workspace.update({
+            data: {
+                name,
+                },
+            where:{
+                id:parseInt(workspaceId)
+            }
+            })
+        return  res.status(201).json({message:'Workspace Updated Successfully',updatedWorkspace});
+    }catch(e){
+        console.log(e);
+        return  res.status(503).json({message:'Failed to Update the Workspace'});
+    }
+}
 export const getWorkspace=async (req,res)=>{
     try{
     const workspaces=await prisma.workspace.findMany({
