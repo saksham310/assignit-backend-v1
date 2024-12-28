@@ -35,9 +35,21 @@ console.log(req.headers);
                    user_id :req.userId,
                }
             }
+        },
+        include:{
+            users: {
+                select: {role:true}
+            }
         }
     });
-        return res.status(200).json({workspaces});
+    const data=workspaces.map((w)=>{
+        return {
+            id:w.id,
+            name:w.name,
+            role:w.users[0].role
+        }
+    })
+        return res.status(200).json({data});
     }catch(e){
         console.log(e);
         return  res.status(503).json({message:'Failed to fetch the Workspaces'});
