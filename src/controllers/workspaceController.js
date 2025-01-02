@@ -1,7 +1,7 @@
 import prisma from "../prismaClient.js";
 
 export const createWorkspace=async (req,res)=>{
-const {name}=req.body;
+const {name,role}=req.body;
 if(!name){
     return res.status(400).json({message:'Please provide a workspace name'});
 }
@@ -12,7 +12,7 @@ const newWorkspace=await prisma.workspace.create({
         users: {
             create:{
                 user_id:req.userId,
-                role:"Owner"
+                role:role
             }
 
         }
@@ -29,6 +29,9 @@ export const updateWorkspace=async (req,res)=>{
     const {workspaceId} = req.params;
     if(!name){
         return res.status(400).json({message:'Please provide a workspace name'});
+    }
+    if(!req.isOwner){
+        return res.status(404).json({message:'You are not authorized to delete this workspace'});
     }
     try{
         const updatedWorkspace=await prisma.workspace.update({
@@ -87,15 +90,7 @@ export const deleteWorkspace=async (req,res)=>{
         if(!workspace){
             return res.status(404).json({message:'Workspace not found'});
         }
-        // Verify if the user has the authorization to delete the workspace
-        const user=await prisma.workspace_User.findFirst({
-            where:{
-                workspace_id:workspaceId,
-                user_id:req.userId,
-                role:"Owner"
-            }
-        });
-        if(!user){
+        if(!req.isOwner){
             return res.status(404).json({message:'You are not authorized to delete this workspace'});
         }
         // Delete the associated data with the workspace being deleted
@@ -134,17 +129,7 @@ export const deleteWorkspace=async (req,res)=>{
 
 export const getWorkSpaceAnalytics=async(req, res)=>{
    try{
-       const {workspaceId} = req.params;
-       const id =parseInt(workspaceId);
-       const user=await prisma.workspace_User.findFirst({
-           where:{
-               workspace_id:id,
-               user_id:req.userId
-           }
-       });
-       if(!user){
-           return res.status(404).json({message:'Something went wrong'});
-       }
+       const id =req.w_id;
        const projectCount=await prisma.project.count({
            where:{
                workspace_id:id
@@ -185,19 +170,9 @@ export const getWorkSpaceAnalytics=async(req, res)=>{
    }
 }
 export const taskList=async (req,res)=>{
-const {workspaceId} = req.params;
 const {projectId}=req.query;
-    const w_id =parseInt(workspaceId);
+    const w_id =req.w_id;
     const  p_id=parseInt(projectId);
-    const user=await prisma.workspace_User.findFirst({
-        where:{
-            workspace_id:w_id,
-            user_id:req.userId
-        }
-    });
-    if(!user){
-        return res.status(404).json({message:'Something went wrong'});
-    }
     const taskList=await prisma.tasks.findMany({
         where:{
             sprint:{
@@ -212,8 +187,7 @@ const {projectId}=req.query;
 }
 
 export const memberList=async (req,res)=>{
-    const {workspaceId} = req.params;
-    const w_id =parseInt(workspaceId);
+    const w_id =req.w_id;
     const user= await prisma.workspace_User.findMany({
         where:{
             workspace_id:w_id,
