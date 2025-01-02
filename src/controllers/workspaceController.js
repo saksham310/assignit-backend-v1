@@ -184,3 +184,57 @@ export const getWorkSpaceAnalytics=async(req, res)=>{
        return  res.status(500).json({message:'Failed to get workspace'});
    }
 }
+export const taskList=async (req,res)=>{
+const {workspaceId} = req.params;
+const {projectId}=req.query;
+    const w_id =parseInt(workspaceId);
+    const  p_id=parseInt(projectId);
+    const user=await prisma.workspace_User.findFirst({
+        where:{
+            workspace_id:w_id,
+            user_id:req.userId
+        }
+    });
+    if(!user){
+        return res.status(404).json({message:'Something went wrong'});
+    }
+    const taskList=await prisma.tasks.findMany({
+        where:{
+            sprint:{
+                project_id:p_id,
+                project:{
+                    workspace_id:w_id,
+                }
+            }
+        }
+    })
+    return res.status(200).json({taskList});
+}
+
+export const memberList=async (req,res)=>{
+    const {workspaceId} = req.params;
+    const w_id =parseInt(workspaceId);
+    const user= await prisma.workspace_User.findMany({
+        where:{
+            workspace_id:w_id,
+        },include:{
+            user:{
+                select:{
+                    email:true,
+                    username:true,
+                    id:true,
+                }
+            }
+        }
+    })
+    const userList=user.map((u)=>{
+        return {
+            id:u.user.id,
+            name:u.user.username,
+            email:u.user.email,
+            role:u.role,
+
+        }
+    })
+    return res.status(200).json({userList});
+}
