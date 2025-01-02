@@ -60,9 +60,11 @@ model Project {
   name         String
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
+  dueDate      DateTime
   users        Project_User[] @relation("ProjectUser")
   workspace    Workspace      @relation("WorkspaceProjects", fields: [workspace_id], references: [id])
   workspace_id Int
+  Sprint Sprint[] @relation("ProjectSprint")
 }
 
 model Project_User {
@@ -72,4 +74,16 @@ model Project_User {
   project    Project       @relation("ProjectUser", fields: [project_id], references: [id])
   project_id Int
   role       Project_Roles @default(Unassigned)
+}
+
+model Sprint {
+  id Int @id @default(autoincrement())
+  name String
+  project Project @relation("ProjectSprint",fields: [project_id],references: [id])
+  project_id Int
+  startDate DateTime
+  endDate DateTime
+
+
+
 }
