@@ -83,7 +83,13 @@ model Sprint {
   project_id Int
   startDate DateTime
   endDate DateTime
+  Tasks Tasks[] @relation("SprintTask")
+}
 
-
-
+model Tasks{
+  id Int @id @default(autoincrement())
+  name String
+  description String
+  sprint_id Int
+  sprint Sprint @relation("SprintTask",fields: [sprint_id],references: [id])
 }
