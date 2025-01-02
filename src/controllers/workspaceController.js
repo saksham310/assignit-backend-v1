@@ -87,6 +87,7 @@ export const deleteWorkspace=async (req,res)=>{
         if(!workspace){
             return res.status(404).json({message:'Workspace not found'});
         }
+        // Verify if the user has the authorization to delete the workspace
         const user=await prisma.workspace_User.findFirst({
             where:{
                 workspace_id:workspaceId,
@@ -97,6 +98,7 @@ export const deleteWorkspace=async (req,res)=>{
         if(!user){
             return res.status(404).json({message:'You are not authorized to delete this workspace'});
         }
+        // Delete the associated data with the workspace being deleted
         await prisma.workspace_User.deleteMany({
             where:{
                 workspace_id:workspaceId,
@@ -128,4 +130,57 @@ export const deleteWorkspace=async (req,res)=>{
         console.log(e);
         return  res.status(500).json({message:'Failed to delete workspace'});
     }
+}
+
+export const getWorkSpaceAnalytics=async(req, res)=>{
+   try{
+       const {workspaceId} = req.params;
+       const id =parseInt(workspaceId);
+       const user=await prisma.workspace_User.findFirst({
+           where:{
+               workspace_id:id,
+               user_id:req.userId
+           }
+       });
+       if(!user){
+           return res.status(404).json({message:'Something went wrong'});
+       }
+       const projectCount=await prisma.project.count({
+           where:{
+               workspace_id:id
+           }
+       });
+       const userCount=await prisma.workspace_User.count({
+           where:{
+               workspace_id:id
+           }
+       })
+       const sprintCount=await prisma.sprint.count({
+           where:{
+               project:{
+                   workspace_id:id
+               }
+
+           }
+       })
+       const dueProject=await prisma.project.count({
+           where:{
+               workspace_id:id,
+               dueDate:{
+                   lte:new Date(),
+               },
+           }
+       })
+
+       const workspaceAnalytics={
+           totalProject:projectCount,
+           totalMembers:userCount,
+           totalSprint:sprintCount,
+           dueProject:dueProject,
+       }
+       return res.status(200).json({workspaceAnalytics});
+   }catch (e){
+       console.log(e);
+       return  res.status(500).json({message:'Failed to get workspace'});
+   }
 }
