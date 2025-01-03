@@ -1,7 +1,7 @@
 import prisma from "../prismaClient.js";
 
 export const createWorkspace=async (req,res)=>{
-const {name}=req.body;
+const {name,role}=req.body;
 if(!name){
     return res.status(400).json({message:'Please provide a workspace name'});
 }
@@ -12,7 +12,7 @@ const newWorkspace=await prisma.workspace.create({
         users: {
             create:{
                 user_id:req.userId,
-                role:"Owner"
+                role:role
             }
 
         }
@@ -29,6 +29,9 @@ export const updateWorkspace=async (req,res)=>{
     const {workspaceId} = req.params;
     if(!name){
         return res.status(400).json({message:'Please provide a workspace name'});
+    }
+    if(!req.isOwner){
+        return res.status(404).json({message:'You are not authorized to delete this workspace'});
     }
     try{
         const updatedWorkspace=await prisma.workspace.update({
@@ -87,16 +90,10 @@ export const deleteWorkspace=async (req,res)=>{
         if(!workspace){
             return res.status(404).json({message:'Workspace not found'});
         }
-        const user=await prisma.workspace_User.findFirst({
-            where:{
-                workspace_id:workspaceId,
-                user_id:req.userId,
-                role:"Owner"
-            }
-        });
-        if(!user){
+        if(!req.isOwner){
             return res.status(404).json({message:'You are not authorized to delete this workspace'});
         }
+        // Delete the associated data with the workspace being deleted
         await prisma.workspace_User.deleteMany({
             where:{
                 workspace_id:workspaceId,
@@ -128,4 +125,90 @@ export const deleteWorkspace=async (req,res)=>{
         console.log(e);
         return  res.status(500).json({message:'Failed to delete workspace'});
     }
+}
+
+export const getWorkSpaceAnalytics=async(req, res)=>{
+   try{
+       const id =req.w_id;
+       const projectCount=await prisma.project.count({
+           where:{
+               workspace_id:id
+           }
+       });
+       const userCount=await prisma.workspace_User.count({
+           where:{
+               workspace_id:id
+           }
+       })
+       const sprintCount=await prisma.sprint.count({
+           where:{
+               project:{
+                   workspace_id:id
+               }
+
+           }
+       })
+       const dueProject=await prisma.project.count({
+           where:{
+               workspace_id:id,
+               dueDate:{
+                   gte:new Date(),
+               },
+           }
+       })
+
+       const workspaceAnalytics={
+           totalProject:projectCount,
+           totalMembers:userCount,
+           totalSprint:sprintCount,
+           dueProject:dueProject,
+       }
+       return res.status(200).json({workspaceAnalytics});
+   }catch (e){
+       console.log(e);
+       return  res.status(500).json({message:'Failed to get workspace'});
+   }
+}
+export const taskList=async (req,res)=>{
+const {projectId}=req.query;
+    const w_id =req.w_id;
+    const  p_id=parseInt(projectId);
+    const taskList=await prisma.tasks.findMany({
+        where:{
+            sprint:{
+                project_id:p_id,
+                project:{
+                    workspace_id:w_id,
+                }
+            }
+        }
+    })
+    return res.status(200).json({taskList});
+}
+
+export const memberList=async (req,res)=>{
+    const w_id =req.w_id;
+    const user= await prisma.workspace_User.findMany({
+        where:{
+            workspace_id:w_id,
+        },include:{
+            user:{
+                select:{
+                    email:true,
+                    username:true,
+                    id:true,
+                }
+            }
+        }
+    })
+    const userList=user.map((u)=>{
+        return {
+            id:u.user.id,
+            name:u.user.username,
+            email:u.user.email,
+            role:u.role,
+
+        }
+    })
+    return res.status(200).json({userList});
 }

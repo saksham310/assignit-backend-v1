@@ -1,11 +1,21 @@
 import express from "express";
-import {createWorkspace, deleteWorkspace, getWorkspace, updateWorkspace} from "../controllers/workspaceController.js";
+import {
+    createWorkspace,
+    deleteWorkspace,
+    getWorkspace,
+    updateWorkspace,
+    getWorkSpaceAnalytics, taskList, memberList
+} from "../controllers/workspaceController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
+import workspaceMiddleware from "../middleware/workspaceMiddleware.js";
 
 const router=express.Router();
 
-router.get("/getWorkspaces",authMiddleware,getWorkspace);
-router.post("/create",authMiddleware,createWorkspace);
-router.put("/update/:workspaceId",authMiddleware,updateWorkspace);
-router.delete("/deleteWorkspace/:workspaceId",authMiddleware,deleteWorkspace);
+router.get("/getWorkspaces",getWorkspace);
+router.get("/getWorkspaceAnalytics/:workspaceId",workspaceMiddleware,getWorkSpaceAnalytics);
+router.get("/allTasks/:workspaceId",workspaceMiddleware,taskList);
+router.get("/memberList/:workspaceId",workspaceMiddleware,memberList);
+router.post("/create",createWorkspace);
+router.put("/update/:workspaceId",workspaceMiddleware,updateWorkspace);
+router.delete("/deleteWorkspace/:workspaceId",workspaceMiddleware,deleteWorkspace);
 export default router;
