@@ -71,7 +71,7 @@ export const getWorkspace=async (req,res)=>{
             role:w.users[0].role
         }
     })
-        return res.status(200).json({data});
+        return res.status(200).json(data);
     }catch(e){
         console.log(e);
         return  res.status(503).json({message:'Failed to fetch the Workspaces'});
