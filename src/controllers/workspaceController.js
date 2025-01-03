@@ -152,7 +152,7 @@ export const getWorkSpaceAnalytics=async(req, res)=>{
            where:{
                workspace_id:id,
                dueDate:{
-                   lte:new Date(),
+                   gte:new Date(),
                },
            }
        })
