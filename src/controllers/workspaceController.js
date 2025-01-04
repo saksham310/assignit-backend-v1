@@ -158,10 +158,10 @@ export const getWorkSpaceAnalytics=async(req, res)=>{
        })
 
        const workspaceAnalytics={
-           totalProject:projectCount,
-           totalMembers:userCount,
-           totalSprint:sprintCount,
-           dueProject:dueProject,
+           Projects:projectCount,
+           Members:userCount,
+           Sprints:sprintCount,
+           "Overdue Projects":dueProject,
        }
        return res.status(200).json({workspaceAnalytics});
    }catch (e){
