@@ -31,7 +31,7 @@ export const updateWorkspace=async (req,res)=>{
         return res.status(400).json({message:'Please provide a workspace name'});
     }
     if(!req.isOwner){
-        return res.status(404).json({message:'You are not authorized to delete this workspace'});
+        return res.status(404).json({message:'You are not authorized to update this workspace'});
     }
     try{
         const updatedWorkspace=await prisma.workspace.update({
