@@ -31,7 +31,7 @@ export const updateWorkspace=async (req,res)=>{
         return res.status(400).json({message:'Please provide a workspace name'});
     }
     if(!req.isOwner){
-        return res.status(404).json({message:'You are not authorized to delete this workspace'});
+        return res.status(404).json({message:'You are not authorized to update this workspace'});
     }
     try{
         const updatedWorkspace=await prisma.workspace.update({
@@ -71,7 +71,7 @@ export const getWorkspace=async (req,res)=>{
             role:w.users[0].role
         }
     })
-        return res.status(200).json({data});
+        return res.status(200).json(data);
     }catch(e){
         console.log(e);
         return  res.status(503).json({message:'Failed to fetch the Workspaces'});
@@ -158,10 +158,10 @@ export const getWorkSpaceAnalytics=async(req, res)=>{
        })
 
        const workspaceAnalytics={
-           totalProject:projectCount,
-           totalMembers:userCount,
-           totalSprint:sprintCount,
-           dueProject:dueProject,
+           Projects:projectCount,
+           Members:userCount,
+           Sprints:sprintCount,
+           "Overdue Projects":dueProject,
        }
        return res.status(200).json({workspaceAnalytics});
    }catch (e){
