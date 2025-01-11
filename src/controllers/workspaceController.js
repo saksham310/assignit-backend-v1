@@ -1,4 +1,5 @@
 import prisma from "../prismaClient.js";
+import {generateInviteCode} from "../utils/inviteCode.generator.js";
 
 export const createWorkspace=async (req,res)=>{
 const {name,role}=req.body;
@@ -6,9 +7,11 @@ if(!name){
     return res.status(400).json({message:'Please provide a workspace name'});
 }
 try{
+const inviteCode=generateInviteCode(7);
 const newWorkspace=await prisma.workspace.create({
     data: {
         name,
+        inviteCode,
         users: {
             create:{
                 user_id:req.userId,
