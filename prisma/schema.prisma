@@ -33,6 +33,7 @@ model User {
   updatedAt  DateTime         @updatedAt
   otp        String?
   otp_expiry DateTime?
+  imageUrl   String?
   workspaces Workspace_User[] @relation("WorkspaceUser")
   projects   Project_User[]   @relation("ProjectUser")
 }

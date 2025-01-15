@@ -1,9 +1,10 @@
 import express from 'express';
 import 'dotenv/config';
-import authRoute from './routes/authRoutes.js';
+import authRoute from './routes/auth.routes.js';
 import cors from 'cors';
 import authMiddleware from "./middleware/authMiddleware.js";
-import workspaceRoute from "./routes/workspaceRoutes.js";
+import workspaceRoute from "./routes/workspace.routes.js";
+import userRoutes from "./routes/user.routes.js";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -15,7 +16,8 @@ app.use(cors({
 
 app.use(express.json());
 app.use('/api/auth', authRoute);
-app.use('/api/workspace', authMiddleware, workspaceRoute)
+app.use('/api/workspace', authMiddleware, workspaceRoute);
+app.use('/api/user', authMiddleware, userRoutes)
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
