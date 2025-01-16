@@ -37,7 +37,12 @@ export const updateUser = async (req, res) => {
             })
         }
 
-        return res.status(200).json(updatedProfile);
+        return res.status(200).json({
+                     id: updatedProfile.id,
+                username: updatedProfile.username,
+                email: updatedProfile.email,
+                image:updatedProfile.imageUrl
+        });
     } catch (error) {
         console.log(error);
         res.status(500).json({
