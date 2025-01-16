@@ -40,7 +40,8 @@ export const registerUser = async (req, res) => {
             token, user: {
                 id: user.id,
                 username: user.username,
-                email: user.email
+                email: user.email,
+                image:user.imageUrl
             }
         })
     }
@@ -70,7 +71,8 @@ export const loginUser=async(req,res)=>{
             token, user: {
                 id: user.id,
                 username: user.username,
-                email: user.email
+                email: user.email,
+                image:user.imageUrl
             }
         })
     }catch (err) {
