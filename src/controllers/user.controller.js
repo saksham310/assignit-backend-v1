@@ -1,33 +1,30 @@
-import cloudinary from "../config/cloudinary.js";
+import {uploadImage} from "../utils/image.uploader.js";
+import prisma from "../prismaClient.js";
+import bcrypt from "bcryptjs";
 
 export const updateUser = async (req, res) => {
+    const {username, email, password,} = req.body;
+    const hashedPassword = bcrypt.hashSync(password, 10);
     try {
+        let imageUrl;
         if (req.file) {
             const fileBuffer = req.file.buffer;
-
-            const stream = cloudinary.uploader.upload_stream(
-                {
-                    folder: 'user_profiles',
-                    resource_type: 'auto'
-                },
-                (error, result) => {
-                    if (error) {
-                        return res.status(500).json({
-                            message: 'Failed to update profile',
-                            error: error.message,
-                        });
-                    }
-                    res.status(200).json({
-                        message: 'Profile updated successfully',
-                        imageUrl: result.secure_url,
-                    });
-                }
-            );
-            // Pipe the fileBuffer to the Cloudinary stream
-            stream.end(fileBuffer);
+            imageUrl=await uploadImage(fileBuffer);
         }
+        const updatedProfile=await prisma.user.update({
+            data:{
+                username,
+                email,
+                password:hashedPassword,
+                imageUrl,
+            },
+            where:{
+                id: req.userId,
+            }
+        })
+        return res.status(200).json(updatedProfile);
     } catch (error) {
-        console.error('Error uploading to Cloudinary:', error);
+        console.log(error);
         res.status(500).json({
             message: 'Failed to update profile',
             error: error.message,
