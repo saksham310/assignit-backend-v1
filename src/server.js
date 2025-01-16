@@ -2,7 +2,7 @@ import express from 'express';
 import 'dotenv/config';
 import authRoute from './routes/auth.routes.js';
 import cors from 'cors';
-import authMiddleware from "./middleware/authMiddleware.js";
+import authMiddleware from "./middleware/auth.middleware.js";
 import workspaceRoute from "./routes/workspace.routes.js";
 import userRoutes from "./routes/user.routes.js";
 
