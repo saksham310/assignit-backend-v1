@@ -99,11 +99,35 @@ export const sendOTP=async (req,res)=> {
                 }
             })
         const emailTemplate=generateResetPasswordEmail(user.username,user.otp);
-        sendEmail(' AssignIt Password Reset OTP',emailTemplate,email);
-        res.status(200).json("Verification has been sent to your email");
+       const status=await sendEmail(' AssignIt Password Reset OTP',emailTemplate,email);
+       if(status.success){
+         return  res.status(200).json("Verification has been sent to your email");
+       }
+       return  res.status(500).json("Something went wrong");
     }catch (err){
         console.error("Error in sending OTP:", err.message);
         res.status(200).json("Verification has been sent to your email");
     }
 
+}
+
+export const  verifyOTP=async(req,res)=>{
+    const {otp,email}=req.body;
+    try{
+        const user = await prisma.user.findUnique({
+            where:{
+                email
+            }
+        })
+        if(!user){
+            return res.status(401).json({message:'Invalid OTP'});
+        }
+        if(user.otp===otp && user.otp_expiry > new Date()){
+            return res.status(200).json("OTP Verified Successfully! You can now proceed to change your password.");
+        }
+        return res.status(500).json("OTP expired!");
+
+    }catch(err){
+        console.log(err.message);
+    }
 }
