@@ -2,6 +2,9 @@ import bcrypt from "bcryptjs";
 import jwt from 'jsonwebtoken';
 import 'dotenv/config';
 import prisma from '../prismaClient.js';
+import {generateOTP} from "../utils/otp.generator.js";
+import {generateResetPasswordEmail} from "../utils/email-template.generator.js";
+import {sendEmail} from "../utils/email.service.js";
 
 export const registerUser = async (req, res) => {
     const { email, username, password } = req.body;
@@ -79,4 +82,28 @@ export const loginUser=async(req,res)=>{
         console.log(err.message);
        return res.sendStatus(503);
     }
+}
+
+export const sendOTP=async (req,res)=> {
+    const {email}=req.body;
+    try{
+            const otp = generateOTP();
+            const otp_expiry =  new Date(Date.now() + 10 * 60 * 1000);
+            const user=await prisma.user.update({
+                data:{
+                    otp,
+                    otp_expiry
+                },
+                where:{
+                    email
+                }
+            })
+        const emailTemplate=generateResetPasswordEmail(user.username,user.otp);
+        sendEmail(' AssignIt Password Reset OTP',emailTemplate,email);
+        res.status(200).json("Verification has been sent to your email");
+    }catch (err){
+        console.error("Error in sending OTP:", err.message);
+        res.status(200).json("Verification has been sent to your email");
+    }
+
 }
