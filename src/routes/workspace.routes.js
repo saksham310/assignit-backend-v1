@@ -6,7 +6,7 @@ import {
     updateWorkspace,
     getWorkSpaceAnalytics, taskList, memberList
 } from "../controllers/workspace.controller.js";
-import workspaceMiddleware from "../middleware/workspaceMiddleware.js";
+import workspaceMiddleware from "../middleware/workspace.middleware.js";
 
 const router=express.Router();
 
