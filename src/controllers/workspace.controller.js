@@ -28,8 +28,7 @@ const newWorkspace=await prisma.workspace.create({
 }
 }
 export const updateWorkspace=async (req,res)=>{
-    const {name}=req.body;
-    const {workspaceId} = req.params;
+    const {name,id}=req.body;
     if(!name){
         return res.status(400).json({message:'Please provide a workspace name'});
     }
@@ -42,7 +41,7 @@ export const updateWorkspace=async (req,res)=>{
                 name,
                 },
             where:{
-                id:parseInt(workspaceId)
+                id:parseInt(id)
             }
             })
         return  res.status(201).json({message:'Workspace Updated Successfully',updatedWorkspace});
@@ -214,4 +213,25 @@ export const memberList=async (req,res)=>{
         }
     })
     return res.status(200).json({userList});
+}
+export const leaveWorkspace=async (req,res)=>{
+   try{
+       const workspaceId =parseInt(req.params.workspaceId);
+       await prisma.workspace_User.deleteMany({
+           where:{
+               workspace_id:workspaceId,
+               user_id:req.userId
+           }
+       })
+       await prisma.project_User.deleteMany({
+           where:{
+               project:{
+                   workspace_id:workspaceId,
+               }
+           }})
+       return res.status(200).json({message:'Workspace left successfully'});
+   }catch (e){
+       console.log(e);
+       return  res.status(500).json({message:'Something went wrong'});
+   }
 }
