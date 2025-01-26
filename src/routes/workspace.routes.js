@@ -17,5 +17,5 @@ router.get("/memberList/:workspaceId",workspaceMiddleware,memberList);
 router.post("/create",createWorkspace);
 router.put("/update-workspace/:workspaceId",workspaceMiddleware,updateWorkspace);
 router.get("/leave-workspace/:workspaceId",leaveWorkspace);
-router.delete("/deleteWorkspace/:workspaceId",workspaceMiddleware,deleteWorkspace);
+router.delete("/delete-workspace/:workspaceId",workspaceMiddleware,deleteWorkspace);
 export default router;
