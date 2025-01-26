@@ -4,7 +4,7 @@ import {
     deleteWorkspace,
     getWorkspace,
     updateWorkspace,
-    getWorkSpaceAnalytics, taskList, memberList
+    getWorkSpaceAnalytics, taskList, memberList, leaveWorkspace
 } from "../controllers/workspace.controller.js";
 import workspaceMiddleware from "../middleware/workspace.middleware.js";
 
@@ -15,6 +15,7 @@ router.get("/getWorkspaceAnalytics/:workspaceId",workspaceMiddleware,getWorkSpac
 router.get("/allTasks/:workspaceId",workspaceMiddleware,taskList);
 router.get("/memberList/:workspaceId",workspaceMiddleware,memberList);
 router.post("/create",createWorkspace);
-router.put("/update/:workspaceId",workspaceMiddleware,updateWorkspace);
-router.delete("/deleteWorkspace/:workspaceId",workspaceMiddleware,deleteWorkspace);
+router.put("/update-workspace/:workspaceId",workspaceMiddleware,updateWorkspace);
+router.get("/leave-workspace/:workspaceId",leaveWorkspace);
+router.delete("/delete-workspace/:workspaceId",workspaceMiddleware,deleteWorkspace);
 export default router;
