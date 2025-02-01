@@ -129,8 +129,11 @@ export const  verifyOTP=async(req,res)=>{
         if(!user){
             return res.status(401).json({message:'Invalid OTP'});
         }
-        if(user.otp===otp && user.otp_expiry > new Date()){
-            return res.status(200).json({message:"OTP Verified Successfully! You can now proceed to change your password."});
+        if(user.otp===otp){
+            if(user.otp_expiry > new Date()){
+                return res.status(200).json({message:"OTP Verified Successfully! You can now proceed to change your password."});
+            }
+            return res.status(500).json({message:"OTP expired!"});
         }
         return res.status(500).json({message:"Invalid OTP!"});
 
