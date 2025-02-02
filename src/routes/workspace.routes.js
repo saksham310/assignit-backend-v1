@@ -13,7 +13,7 @@ const router=express.Router();
 router.get("/getWorkspaces",getWorkspace);
 router.get("/getWorkspaceAnalytics/:workspaceId",workspaceMiddleware,getWorkSpaceAnalytics);
 router.get("/allTasks/:workspaceId",workspaceMiddleware,taskList);
-router.get("/memberList/:workspaceId",workspaceMiddleware,memberList);
+router.get("/memberList/:workspaceId",workspaceMiddleware, memberList);
 router.post("/create",createWorkspace);
 router.put("/update-workspace/:workspaceId",workspaceMiddleware,updateWorkspace);
 router.get("/leave-workspace/:workspaceId",leaveWorkspace);

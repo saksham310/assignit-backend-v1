@@ -195,6 +195,7 @@ export const memberList=async (req,res)=>{
             workspace_id:w_id,
         },select:{
             joinDate:true,
+            role: true,
             user:{
                 select:{
                     email:true,
