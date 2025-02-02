@@ -193,7 +193,8 @@ export const memberList=async (req,res)=>{
     const user= await prisma.workspace_User.findMany({
         where:{
             workspace_id:w_id,
-        },include:{
+        },select:{
+            joinDate:true,
             user:{
                 select:{
                     email:true,
@@ -208,7 +209,9 @@ export const memberList=async (req,res)=>{
             id:u.user.id,
             name:u.user.username,
             email:u.user.email,
+            joinDate:u.joinDate.toISOString().split('T')[0],
             role:u.role,
+
 
         }
     })

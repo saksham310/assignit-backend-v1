@@ -55,6 +55,7 @@ model Workspace_User {
   workspace    Workspace       @relation("WorkspaceUser", fields: [workspace_id], references: [id])
   workspace_id Int
   role         Workspace_Roles @default(Member)
+  joinDate     DateTime         @default(now())
 }
 
 model Project {
