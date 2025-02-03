@@ -8,7 +8,7 @@ datasource db {
 }
 
 // Define Enum for Workspace Roles
-enum Workspace_Roles {
+ enum Workspace_Roles {
   Admin
   Owner
   Member
@@ -55,6 +55,8 @@ model Workspace_User {
   workspace    Workspace       @relation("WorkspaceUser", fields: [workspace_id], references: [id])
   workspace_id Int
   role         Workspace_Roles @default(Member)
+  joinDate     DateTime         @default(now())
+  @@unique([workspace_id, user_id])
 }
 
 model Project {

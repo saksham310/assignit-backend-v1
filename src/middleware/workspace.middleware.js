@@ -14,6 +14,7 @@ const workspaceMiddleware=async (req, res, next) => {
             return res.status(404).json({message: 'Something went wrong'});
         }
         req.isOwner = user.role === "Owner";
+        req.isAdmin = user.role === "Admin";
         req.w_id = w_id;
         next();
     }

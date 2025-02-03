@@ -1,5 +1,6 @@
 import prisma from "../prismaClient.js";
 import {generateInviteCode} from "../utils/inviteCode.generator.js";
+import {WORKSPACE_ROLES} from "../constant/role.constants.js";
 
 export const createWorkspace=async (req,res)=>{
 const {name,role}=req.body;
@@ -193,7 +194,9 @@ export const memberList=async (req,res)=>{
     const user= await prisma.workspace_User.findMany({
         where:{
             workspace_id:w_id,
-        },include:{
+        },select:{
+            joinDate:true,
+            role: true,
             user:{
                 select:{
                     email:true,
@@ -208,7 +211,9 @@ export const memberList=async (req,res)=>{
             id:u.user.id,
             name:u.user.username,
             email:u.user.email,
+            joinDate:u.joinDate.toISOString().split('T')[0],
             role:u.role,
+
 
         }
     })
@@ -234,4 +239,37 @@ export const leaveWorkspace=async (req,res)=>{
        console.log(e);
        return  res.status(500).json({message:'Something went wrong'});
    }
+}
+
+export const updateUserRole = async (req,res)=>{
+   try {
+       const {id,newRole} = req.body;
+
+       if(!newRole || !id){
+           return res.status(500).json({message:'Something went wrong'});
+       }
+   if (!WORKSPACE_ROLES.includes(newRole)){
+            return res.status(400).json({message:'Invalid role. Please try again'});
+       }
+       if( !(req.isOwner || req.isAdmin) ){
+           return res.status(403).json({message:'You do not have permission'});
+       }
+       await prisma.workspace_User.update({
+           data :{
+               role:newRole,
+           },
+           where:{
+               workspace_id_user_id: {
+                   workspace_id: req.w_id,
+                   user_id: parseInt(id),
+               },
+           }
+       })
+       return res.status(200).json({message:'Successfully updated user'});
+   }
+   catch (e){
+       console.log(e);
+       return  res.status(500).json({message:'Something went wrong'});
+   }
+
 }
