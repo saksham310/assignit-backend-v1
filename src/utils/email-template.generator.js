@@ -17,3 +17,21 @@ export const generateResetPasswordEmail = (userName, otp) => {
         }
     };
 };
+
+export const generateWorkspaceInviteEmail = (workspace) => {
+    const url = `http://localhost:5173/invite/${workspace.inviteCode}?name=${workspace.name}`;
+    console.log(url);
+    return {
+        body: {
+            intro: `You have been invited to join the workspace. Click the link below to accept the invitation:`,
+            table: {
+                data: [
+                    {
+                        'Invitation Link': `<div style="text-align: center;"><a href="${url}" target="_blank">"Click to join "</a></div>`
+                    }
+                ]
+            },
+            outro: `This is a system generated email. Please do not reply to this email.`,
+        }
+    }
+};
