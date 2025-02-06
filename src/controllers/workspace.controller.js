@@ -65,15 +65,16 @@ export const getWorkspace = async (req, res) => {
             },
             include: {
                 users: {
-                    select: {role: true}
+                    select: { user_id: true, role: true }
                 }
             }
         });
         const data = workspaces.map((w) => {
+            const userRole = w.users.filter( u => u.user_id === req.userId);
             return {
                 id: w.id,
                 name: w.name,
-                role: w.users[0].role
+                role: userRole[0].role
             }
         })
         return res.status(200).json(data);
@@ -301,4 +302,32 @@ export const inviteMember = async (req, res) => {
         return res.status(500).json({message: 'Something went wrong'});
     }
 
+}
+
+export const joinWorkspace = async (req, res) => {
+   const {inviteCode} = req.body;
+   if (!inviteCode) {
+       return res.status(400).json({message: 'Invalid invite Code'});
+   }
+ try{
+     const workspace = await prisma.workspace.findUnique({
+         where: {
+             inviteCode: inviteCode
+         }
+     })
+     if(!workspace) {
+         return res.status(400).json({message: 'Invalid invitation'});
+     }
+     const user =await prisma.workspace_User.create({
+         data:{
+             user_id: req.userId,
+             workspace_id : workspace.id,
+             role: "Member"
+         }
+     })
+     return res.status(200).json({message: 'Successfully joined workspace',user:user});
+ }catch (e) {
+       console.log(e);
+       return res.status(500).json({message: 'Something went wrong'});
+ }
 }

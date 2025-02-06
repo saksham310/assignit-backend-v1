@@ -44,7 +44,7 @@ model Workspace {
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
   users     Workspace_User[] @relation("WorkspaceUser")
-  inviteCode String
+  inviteCode String          @unique
   projects  Project[]        @relation("WorkspaceProjects")
 }
 
