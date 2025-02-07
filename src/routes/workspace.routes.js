@@ -4,7 +4,7 @@ import {
     deleteWorkspace,
     getWorkspace,
     updateWorkspace,
-    getWorkSpaceAnalytics, taskList, memberList, leaveWorkspace, updateUserRole, inviteMember, joinWorkspace
+    getWorkSpaceAnalytics, memberList, leaveWorkspace, updateUserRole, inviteMember, joinWorkspace
 } from "../controllers/workspace.controller.js";
 import workspaceMiddleware from "../middleware/workspace.middleware.js";
 
@@ -12,7 +12,6 @@ const router=express.Router();
 
 router.get("/getWorkspaces",getWorkspace);
 router.get("/getWorkspaceAnalytics/:workspaceId",workspaceMiddleware,getWorkSpaceAnalytics);
-router.get("/allTasks/:workspaceId",workspaceMiddleware,taskList);
 router.get("/memberList/:workspaceId",workspaceMiddleware, memberList);
 router.post("/create",createWorkspace);
 router.put("/update-role/:workspaceId",workspaceMiddleware,updateUserRole);
