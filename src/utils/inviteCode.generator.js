@@ -1,4 +1,4 @@
-
+import prisma from "../prismaClient.js";
 const characters ='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
 export const generateInviteCode=(length)=>{
