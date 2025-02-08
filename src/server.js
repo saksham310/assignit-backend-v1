@@ -16,7 +16,7 @@ app.use(cors({
 
 app.use(express.json());
 app.use('/api/auth', authRoute);
-app.use('/api/workspace', authMiddleware, workspaceRoute);
+app.use('/api/workspaces', authMiddleware, workspaceRoute);
 app.use('/api/user', authMiddleware, userRoutes)
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

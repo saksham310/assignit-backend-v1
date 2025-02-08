@@ -10,30 +10,19 @@ import workspaceMiddleware from "../middleware/workspace.middleware.js";
 
 const router=express.Router();
 
-router.get("/getWorkspaces",getWorkspaces);
-router.get("/getWorkspaceAnalytics/:workspaceId",workspaceMiddleware,getWorkSpaceAnalytics);
-router.get("/memberList/:workspaceId",workspaceMiddleware, getWorkspaceMembers);
-router.post("/create",createWorkspace);
-router.put("/update-role/:workspaceId",workspaceMiddleware,updateUserRole);
-router.put("/update-workspace/:workspaceId",workspaceMiddleware,updateWorkspace);
-router.get("/leave-workspace/:workspaceId",leaveWorkspace);
-router.delete("/delete-workspace/:workspaceId",workspaceMiddleware,deleteWorkspace);
-router.post("/invite/:workspaceId",inviteMember);
-router.post("/join",joinWorkspace);
+router.get("/",getWorkspaces);
+router.get("/:workspaceId/analytics",workspaceMiddleware,getWorkSpaceAnalytics);
+router.get("/:workspaceId/members",workspaceMiddleware,getWorkspaceMembers);
 
-router.get("/workspaces",getWorkspaces);
-router.get("/workspaces/:workspaceId/analytics",workspaceMiddleware,getWorkSpaceAnalytics);
-router.get("/workspaces/:workspaceId/members",workspaceMiddleware,getWorkspaceMembers);
+router.post("/",createWorkspace);
+router.put("/:workspaceId",workspaceMiddleware,updateWorkspace);
 
-router.post("/workspaces",createWorkspace);
-router.put("/workspaces/:workspaceId",workspaceMiddleware,updateWorkspace);
+router.put("/:workspaceId/members/role",workspaceMiddleware,updateUserRole);
 
-router.put("/workspaces/:workspaceId/members/role",workspaceMiddleware,updateUserRole);
+router.delete("/:workspaceId/members",leaveWorkspace);
+router.delete("/:workspaceId",workspaceMiddleware,deleteWorkspace);
 
-router.delete("/workspaces/:workspaceId/members",leaveWorkspace);
-router.delete("/workspaces/:workspaceId",workspaceMiddleware,deleteWorkspace);
-
-router.post("/workspaces/:workspaceId/invite",inviteMember);
-router.post("/workspaces/members/join",joinWorkspace);
+router.post("/:workspaceId/invite",inviteMember);
+router.post("/members/join",joinWorkspace);
 
 export default router;
