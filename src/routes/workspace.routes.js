@@ -2,22 +2,27 @@ import express from "express";
 import {
     createWorkspace,
     deleteWorkspace,
-    getWorkspace,
+    getWorkspaces,
     updateWorkspace,
-    getWorkSpaceAnalytics, memberList, leaveWorkspace, updateUserRole, inviteMember, joinWorkspace
+    getWorkSpaceAnalytics, getWorkspaceMembers, leaveWorkspace, updateUserRole, inviteMember, joinWorkspace
 } from "../controllers/workspace.controller.js";
 import workspaceMiddleware from "../middleware/workspace.middleware.js";
 
 const router=express.Router();
 
-router.get("/getWorkspaces",getWorkspace);
-router.get("/getWorkspaceAnalytics/:workspaceId",workspaceMiddleware,getWorkSpaceAnalytics);
-router.get("/memberList/:workspaceId",workspaceMiddleware, memberList);
-router.post("/create",createWorkspace);
-router.put("/update-role/:workspaceId",workspaceMiddleware,updateUserRole);
-router.put("/update-workspace/:workspaceId",workspaceMiddleware,updateWorkspace);
-router.get("/leave-workspace/:workspaceId",leaveWorkspace);
-router.delete("/delete-workspace/:workspaceId",workspaceMiddleware,deleteWorkspace);
-router.post("/invite/:workspaceId",inviteMember);
-router.post("/join",joinWorkspace);
+router.get("/",getWorkspaces);
+router.get("/:workspaceId/analytics",workspaceMiddleware,getWorkSpaceAnalytics);
+router.get("/:workspaceId/members",workspaceMiddleware,getWorkspaceMembers);
+
+router.post("/",createWorkspace);
+router.put("/:workspaceId",workspaceMiddleware,updateWorkspace);
+
+router.put("/:workspaceId/members/role",workspaceMiddleware,updateUserRole);
+
+router.delete("/:workspaceId/members",leaveWorkspace);
+router.delete("/:workspaceId",workspaceMiddleware,deleteWorkspace);
+
+router.post("/:workspaceId/invite",inviteMember);
+router.post("/members/join",joinWorkspace);
+
 export default router;

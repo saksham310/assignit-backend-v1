@@ -53,7 +53,7 @@ export const updateWorkspace = async (req, res) => {
         return res.status(500).json({ message: 'Something went wrong, please try again later', error: e.message });
     }
 }
-export const getWorkspace = async (req, res) => {
+export const getWorkspaces = async (req, res) => {
     try {
         const workspaces = await prisma.workspace.findMany({
             where: {
@@ -65,16 +65,18 @@ export const getWorkspace = async (req, res) => {
             },
             include: {
                 users: {
+                    where :{
+                        user_id: req.userId,
+                    },
                     select: { user_id: true, role: true }
                 }
             }
         });
         const data = workspaces.map((w) => {
-            const userRole = w.users.filter( u => u.user_id === req.userId);
             return {
                 id: w.id,
                 name: w.name,
-                role: userRole[0].role
+                role: w.users[0]?.role  || null
             }
         })
         return res.status(200).json(data);
@@ -176,7 +178,7 @@ export const getWorkSpaceAnalytics = async (req, res) => {
     }
 }
 
-export const memberList = async (req, res) => {
+export const getWorkspaceMembers = async (req, res) => {
    try {
        const w_id = req.w_id;
        const user = await prisma.workspace_User.findMany({
