@@ -23,7 +23,11 @@ enum Project_Roles {
   Database
   Unassigned
 }
-
+enum Status_Types {
+  To_Do
+  In_Progress
+  Completed
+}
 model User {
   id         Int              @id @default(autoincrement())
   email      String           @unique
@@ -68,6 +72,7 @@ model Project {
   users        Project_User[] @relation("ProjectUser")
   workspace    Workspace      @relation("WorkspaceProjects", fields: [workspace_id], references: [id])
   workspace_id Int
+  status  Status[]  @relation("ProjectStatus")
   Sprint Sprint[] @relation("ProjectSprint")
 }
 
@@ -79,7 +84,15 @@ model Project_User {
   project_id Int
   role       Project_Roles @default(Unassigned)
 }
+model Status {
+  id Int @id @default(autoincrement())
+  name String
+  type  Status_Types
+  color String?
+  project    Project       @relation("ProjectStatus", fields: [project_id], references: [id])
+  project_id Int
 
+}
 model Sprint {
   id Int @id @default(autoincrement())
   name String
