@@ -1,8 +1,8 @@
 import express from "express";
-import {createWorkspace} from "../controllers/project.controller.js";
+import {createProject} from "../controllers/project.controller.js";
 
 const router = express.Router();
 
-router.post("/",createWorkspace);
+router.post("/",createProject);
 
 export default router;

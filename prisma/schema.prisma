@@ -83,6 +83,7 @@ model Project_User {
   project    Project       @relation("ProjectUser", fields: [project_id], references: [id])
   project_id Int
   role       Project_Roles @default(Unassigned)
+  @@unique([project_id, user_id])
 }
 model Status {
   id Int @id @default(autoincrement())
