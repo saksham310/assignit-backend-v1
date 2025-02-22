@@ -8,7 +8,7 @@ datasource db {
 }
 
 // Define Enum for Workspace Roles
- enum Workspace_Roles {
+enum Workspace_Roles {
   Admin
   Owner
   Member
@@ -23,11 +23,13 @@ enum Project_Roles {
   Database
   Unassigned
 }
+
 enum Status_Types {
   To_Do
   In_Progress
   Completed
 }
+
 model User {
   id         Int              @id @default(autoincrement())
   email      String           @unique
@@ -43,13 +45,13 @@ model User {
 }
 
 model Workspace {
-  id        Int              @id @default(autoincrement())
-  name      String
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-  users     Workspace_User[] @relation("WorkspaceUser")
-  inviteCode String          @unique
-  projects  Project[]        @relation("WorkspaceProjects")
+  id         Int              @id @default(autoincrement())
+  name       String
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  users      Workspace_User[] @relation("WorkspaceUser")
+  inviteCode String           @unique
+  projects   Project[]        @relation("WorkspaceProjects")
 }
 
 model Workspace_User {
@@ -59,21 +61,22 @@ model Workspace_User {
   workspace    Workspace       @relation("WorkspaceUser", fields: [workspace_id], references: [id])
   workspace_id Int
   role         Workspace_Roles @default(Member)
-  joinDate     DateTime         @default(now())
+  joinDate     DateTime        @default(now())
+
   @@unique([workspace_id, user_id])
 }
 
 model Project {
   id           Int            @id @default(autoincrement())
   name         String
-  createdAt    DateTime       @default(now())
+  startDate    DateTime
   updatedAt    DateTime       @updatedAt
   dueDate      DateTime
   users        Project_User[] @relation("ProjectUser")
   workspace    Workspace      @relation("WorkspaceProjects", fields: [workspace_id], references: [id])
   workspace_id Int
-  status  Status[]  @relation("ProjectStatus")
-  Sprint Sprint[] @relation("ProjectSprint")
+  status       Status[]       @relation("ProjectStatus")
+  Sprint       Sprint[]       @relation("ProjectSprint")
 }
 
 model Project_User {
@@ -83,31 +86,33 @@ model Project_User {
   project    Project       @relation("ProjectUser", fields: [project_id], references: [id])
   project_id Int
   role       Project_Roles @default(Unassigned)
+
   @@unique([project_id, user_id])
 }
+
 model Status {
-  id Int @id @default(autoincrement())
-  name String
-  type  Status_Types
-  color String?
-  project    Project       @relation("ProjectStatus", fields: [project_id], references: [id])
+  id         Int          @id @default(autoincrement())
+  name       String
+  type       Status_Types
+  color      String?
+  project    Project      @relation("ProjectStatus", fields: [project_id], references: [id])
   project_id Int
-
 }
+
 model Sprint {
-  id Int @id @default(autoincrement())
-  name String
-  project Project @relation("ProjectSprint",fields: [project_id],references: [id])
+  id         Int      @id @default(autoincrement())
+  name       String
+  project    Project  @relation("ProjectSprint", fields: [project_id], references: [id])
   project_id Int
-  startDate DateTime
-  endDate DateTime
-  Tasks Tasks[] @relation("SprintTask")
+  startDate  DateTime
+  endDate    DateTime
+  Tasks      Tasks[]  @relation("SprintTask")
 }
 
-model Tasks{
-  id Int @id @default(autoincrement())
-  name String
+model Tasks {
+  id          Int    @id @default(autoincrement())
+  name        String
   description String
-  sprint_id Int
-  sprint Sprint @relation("SprintTask",fields: [sprint_id],references: [id])
+  sprint_id   Int
+  sprint      Sprint @relation("SprintTask", fields: [sprint_id], references: [id])
 }
