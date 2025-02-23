@@ -5,6 +5,7 @@ import cors from 'cors';
 import authMiddleware from "./middleware/auth.middleware.js";
 import workspaceRoute from "./routes/workspace.routes.js";
 import userRoutes from "./routes/user.routes.js";
+import projectRoutes from "./routes/project.routes.js";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -17,7 +18,8 @@ app.use(cors({
 app.use(express.json());
 app.use('/api/auth', authRoute);
 app.use('/api/workspaces', authMiddleware, workspaceRoute);
-app.use('/api/user', authMiddleware, userRoutes)
+app.use('/api/user', authMiddleware, userRoutes);
+app.use('/api/projects',authMiddleware,projectRoutes);
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
