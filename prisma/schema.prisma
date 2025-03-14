@@ -76,7 +76,7 @@ model Project {
   workspace    Workspace      @relation("WorkspaceProjects", fields: [workspace_id], references: [id])
   workspace_id Int
   status       Status[]       @relation("ProjectStatus")
-  Sprint       Sprint[]       @relation("ProjectSprint")
+  sprint       Sprint[]       @relation("ProjectSprint")
 }
 
 model Project_User {

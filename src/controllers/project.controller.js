@@ -31,7 +31,7 @@ export const createProject = async (req, res) => {
             // Prepare statuses
             const statusList = (customStatus && customStatus.length > 0 ? customStatus : defaultValues).map(status => ({
                 project_id: project.id,
-                ...status
+                ...status,
             }));
 
             // Create statuses
@@ -61,3 +61,23 @@ export const createProject = async (req, res) => {
         return res.status(500).send({ message: 'Failed to create project' });
     }
 };
+
+export const getProjects = async (req, res) => {
+try {
+    const project = await prisma.project.findMany({
+        where:{
+            users:{
+                some:{
+                    user_id : req.userId,
+                }
+            }
+        },include: {
+            sprint : true
+        }
+    })
+    res.status(200).send(project);
+}catch(err){
+    console.error(err);
+    return res.status(500).send({ message: 'Failed to get projects' });
+}
+}
