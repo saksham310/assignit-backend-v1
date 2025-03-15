@@ -81,3 +81,37 @@ try {
     return res.status(500).send({ message: 'Failed to get projects' });
 }
 }
+
+export const createSprint = async (req, res) => {
+    try {
+        const { name, startDate, dueDate,project_id} = req.body;
+        const projectId = parseInt(project_id);
+        // Check for missing fields
+        if (!name || !startDate || !dueDate || !project_id) {
+            return res.status(400).json({ message: 'Missing required fields' });
+        }
+
+        // Validate date range
+        if (new Date(startDate) >= new Date(dueDate)) {
+            return res.status(400).json({ message: 'Start date must be before due date' });
+        }
+
+        // Check if the project exists
+        const project = await prisma.project.findUnique({ where: { id: projectId } });
+        if (!project) {
+            return res.status(404).json({ message: 'Project not found' });
+        }
+
+        // Create the sprint
+        const sprint = await prisma.sprint.create({
+            data: { name, startDate, endDate: dueDate, project_id: projectId },
+        });
+
+        return res.status(201).json({ message: 'Successfully created project',
+            sprint });
+
+    } catch (err) {
+        console.error('Error creating sprint:', err);
+        return res.status(500).json({ message: 'Failed to create Sprint', error: err.message });
+    }
+};
