@@ -5,6 +5,7 @@ import prisma from '../prismaClient.js';
 import {generateOTP} from "../utils/otp.generator.js";
 import {generateResetPasswordEmail} from "../utils/email-template.generator.js";
 import {sendEmail} from "../utils/email.service.js";
+import {generateColor} from "../utils/color.generator.js";
 
 export const registerUser = async (req, res) => {
     const {email, username, password} = req.body;
@@ -28,7 +29,8 @@ export const registerUser = async (req, res) => {
             data: {
                 email,
                 username,
-                password: hashedPassword
+                password: hashedPassword,
+                avatarColor: generateColor()
             }
         });
         const token = jwt.sign({
@@ -42,7 +44,8 @@ export const registerUser = async (req, res) => {
                 id: user.id,
                 username: user.username,
                 email: user.email,
-                image: user.imageUrl
+                image: user.imageUrl,
+                avatarColor: user.avatarColor
             }
         })
     } catch (err) {
@@ -71,7 +74,8 @@ export const loginUser = async (req, res) => {
                 id: user.id,
                 username: user.username,
                 email: user.email,
-                image: user.imageUrl
+                image: user.imageUrl,
+                avatarColor: user.avatarColor
             }
         })
     } catch (err) {

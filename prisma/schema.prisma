@@ -31,17 +31,18 @@ enum Status_Types {
 }
 
 model User {
-  id         Int              @id @default(autoincrement())
-  email      String           @unique
-  password   String
-  username   String           @unique
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
-  otp        String?
-  otp_expiry DateTime?
-  imageUrl   String?
-  workspaces Workspace_User[] @relation("WorkspaceUser")
-  projects   Project_User[]   @relation("ProjectUser")
+  id          Int              @id @default(autoincrement())
+  email       String           @unique
+  password    String
+  username    String           @unique
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  otp         String?
+  otp_expiry  DateTime?
+  imageUrl    String?
+  avatarColor String?
+  workspaces  Workspace_User[] @relation("WorkspaceUser")
+  projects    Project_User[]   @relation("ProjectUser")
 }
 
 model Workspace {
