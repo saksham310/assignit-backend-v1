@@ -1,17 +1,17 @@
 import prisma from "../prismaClient.js";
 
 const defaultValues = [
-    {name:'To Do', type:'To_Do', color : '#90a9d0' },
-    {name:'In Progress', type:'In_Progress', color : '#f9d171' },
-    {name:'Completed', type:'Completed', color : '#008844' },
+    {name: 'To Do', type: 'To_Do', color: '#90a9d0'},
+    {name: 'In Progress', type: 'In_Progress', color: '#f9d171'},
+    {name: 'Completed', type: 'Completed', color: '#008844'},
 ]
 
 export const createProject = async (req, res) => {
     try {
-        const { name, startDate, dueDate, workspaceId, customStatus } = req.body;
+        const {name, startDate, dueDate, workspaceId, customStatus} = req.body;
 
         if (!name || !startDate || !dueDate || !workspaceId) {
-            return res.status(400).send({ message: 'Missing required fields' });
+            return res.status(400).send({message: 'Missing required fields'});
         }
 
         // Start a transaction
@@ -48,7 +48,7 @@ export const createProject = async (req, res) => {
                 }
             });
 
-            return { project, statusList };
+            return {project, statusList};
         });
 
         return res.status(200).send({
@@ -58,60 +58,116 @@ export const createProject = async (req, res) => {
         });
     } catch (err) {
         console.error(err);
-        return res.status(500).send({ message: 'Failed to create project' });
+        return res.status(500).send({message: 'Failed to create project'});
     }
 };
 
 export const getProjects = async (req, res) => {
-try {
-    const project = await prisma.project.findMany({
-        where:{
-            users:{
-                some:{
-                    user_id : req.userId,
+    const {workspaceId} = req.params;
+    try {
+        const projects = await prisma.project.findMany({
+            where: {
+                workspace_id: parseInt(workspaceId),
+                users: {
+                    some: {
+                        user_id: req.userId,
+                    }
                 }
+            }, include: {
+                sprint: true
             }
-        },include: {
-            sprint : true
-        }
-    })
-    res.status(200).send(project);
-}catch(err){
-    console.error(err);
-    return res.status(500).send({ message: 'Failed to get projects' });
-}
+        })
+        const projectsWithTaskCounts = await Promise.all(
+            projects.map(async (project) => {
+                const totalTasks = await prisma.tasks.count({
+                    where: {
+                        sprint: {
+                            project_id: project.id
+                        }
+                    }
+                });
+
+                const toDoTasks = await prisma.tasks.count({
+                    where: {
+                        sprint: {
+                            project_id: project.id
+                        },
+                        status: {
+                            type: "To_Do"
+                        }
+                    }
+                });
+
+                const inProgressTasks = await prisma.tasks.count({
+                    where: {
+                        sprint: {
+                            project_id: project.id
+                        },
+                        status: {
+                            type: "In_Progress"
+                        }
+                    }
+                });
+
+                const completedTasks = await prisma.tasks.count({
+                    where: {
+                        sprint: {
+                            project_id: project.id
+                        },
+                        status: {
+                            type: "Completed"
+                        }
+                    }
+                });
+
+                return  {
+                    ...project,
+                    toDo: toDoTasks,
+                    inProgress: inProgressTasks,
+                    completed: completedTasks,
+            tasks: totalTasks,
+                };
+            })
+        );
+        return res.status(200).send(projectsWithTaskCounts)
+    } catch (err) {
+        console.error(err);
+        return res.status(500).send({message: 'Failed to get projects'});
+    }
 }
 
 export const createSprint = async (req, res) => {
     try {
-        const { name, startDate, dueDate,project_id} = req.body;
+        const {name, startDate, dueDate, project_id} = req.body;
         const projectId = parseInt(project_id);
         // Check for missing fields
         if (!name || !startDate || !dueDate || !project_id) {
-            return res.status(400).json({ message: 'Missing required fields' });
+            return res.status(400).json({message: 'Missing required fields'});
         }
 
         // Validate date range
         if (new Date(startDate) >= new Date(dueDate)) {
-            return res.status(400).json({ message: 'Start date must be before due date' });
+            return res.status(400).json({message: 'Start date must be before due date'});
         }
 
         // Check if the project exists
-        const project = await prisma.project.findUnique({ where: { id: projectId } });
+        const project = await prisma.project.findUnique({where: {id: projectId}});
         if (!project) {
-            return res.status(404).json({ message: 'Project not found' });
+            return res.status(404).json({message: 'Project not found'});
         }
 
         // Create the sprint
         const sprint = await prisma.sprint.create({
-            data: { name, startDate, endDate: dueDate, project_id: projectId },
+            data: {name, startDate, endDate: dueDate, project_id: projectId},
         });
 
-        return res.status(201).json({ message: 'Successfully created project',
-            sprint });
+        return res.status(201).json({
+            message: 'Successfully created project',
+            sprint
+        });
 
     } catch (err) {
         console.error('Error creating sprint:', err);
-        return res.status(500).json({ message: 'Failed to create Sprint', error: err.message });
+        return res.status(500).json({message: 'Failed to create Sprint', error: err.message});
     }
 };

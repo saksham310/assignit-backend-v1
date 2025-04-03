@@ -4,7 +4,7 @@ import {createProject, createSprint, getProjects} from "../controllers/project.c
 const router = express.Router();
 
 router.post("/",createProject);
-router.get("/",getProjects);
+router.get("/:workspaceId",getProjects);
 router.post("/sprint",createSprint);
 
 export default router;

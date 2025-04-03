@@ -43,6 +43,7 @@ model User {
   avatarColor String?
   workspaces  Workspace_User[] @relation("WorkspaceUser")
   projects    Project_User[]   @relation("ProjectUser")
+  Task_User   Task_User[]      @relation("TaskUser")
 }
 
 model Workspace {
@@ -98,6 +99,7 @@ model Status {
   color      String?
   project    Project      @relation("ProjectStatus", fields: [project_id], references: [id])
   project_id Int
+  Tasks      Tasks[]      @relation("TaskStatus")
 }
 
 model Sprint {
@@ -111,9 +113,22 @@ model Sprint {
 }
 
 model Tasks {
-  id          Int    @id @default(autoincrement())
+  id          Int         @id @default(autoincrement())
   name        String
   description String
   sprint_id   Int
-  sprint      Sprint @relation("SprintTask", fields: [sprint_id], references: [id])
+  sprint      Sprint      @relation("SprintTask", fields: [sprint_id], references: [id])
+  status_id   Int
+  status      Status      @relation("TaskStatus", fields: [status_id], references: [id])
+  Task_User   Task_User[] @relation("TaskUser")
+}
+
+model Task_User {
+  id      Int   @id @default(autoincrement())
+  user    User  @relation("TaskUser", fields: [user_id], references: [id])
+  user_id Int
+  task    Tasks @relation("TaskUser", fields: [task_id], references: [id])
+  task_id Int
+
+  @@unique([task_id, user_id])
 }
