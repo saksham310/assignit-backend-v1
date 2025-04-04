@@ -171,3 +171,96 @@ export const createSprint = async (req, res) => {
         return res.status(500).json({message: 'Failed to create Sprint', error: err.message});
     }
 };
+
+export const getProjectTasks = async (req, res) => {
+   try {
+       const {projectId} = req.params;
+       const projectData = await prisma.project.findUnique({
+           where: { id: parseInt(projectId) },
+           include: {
+               sprint: {
+                   include: {
+                       Tasks: {
+                           include: {
+                                       Task_User: {
+                                           include: {
+                                               user: true,
+                                           }
+                                       }
+                                   }
+                               }
+                           }
+                       }
+                   }
+       });
+       const formattedProjectData = projectData.sprint.map((sprint) => ({
+           id: sprint.id,
+           name: sprint.name,
+           taskStatus: sprint.Tasks.map((status) => ({
+               name: status.name,
+               type: status.type,
+               color: status.color,
+               tasks: status.tasks.map((task) => ({
+                   id: task.id,
+                   name: task.name,
+                   assignees: task.Task_User.map((taskUser) => ({
+                       id: taskUser.user.id,
+                       username: taskUser.user.username,
+                       email: taskUser.user.email,
+                       image: taskUser.user.imageUrl,
+                       avatarColor: taskUser.user.avatarColor
+                   })),
+                   bugCount: 0,
+                   priority: 'high'
+               }))
+           }))
+       }));
+       return res.status(200).send(formattedProjectData)
+   }catch (err) {
+       console.error(err);
+       return res.status(500).json({message: 'Failed to get project tasks'});
+   }
+}
+
+export const getSprintTasks = async (req, res) => {
+    try {
+        const {sprintId} = req.params;
+        const sprintData = await prisma.sprint.findUnique({
+            where: {id: parseInt(sprintId)},
+            include: {
+                        Tasks: {
+                            include: {
+                                Task_User: {
+                                    include: {
+                                        user: true,
+                                    }
+                                }
+                            }
+                        }
+                    }
+        })
+        const taskStatus = sprintData.Tasks.map((status) => ({
+            name: status.name,
+            type: status.type,
+            color: status.color,
+            tasks: status.tasks.map((task) => ({
+                id: task.id,
+                name: task.name,
+                assignees: task.Task_User.map((taskUser) => ({
+                    id: taskUser.user.id,
+                    username: taskUser.user.username,
+                    email: taskUser.user.email,
+                    image: taskUser.user.imageUrl,
+                    avatarColor: taskUser.user.avatarColor
+                })),
+                bugCount: 0,
+                priority: 'high'
+            }))
+        }))
+        console.log(taskStatus);
+        return res.status(200).send({taskStatus})
+    }catch (err) {
+        console.error(err);
+        return res.status(500).json({message: 'Failed to get sprint tasks'});
+    }
+}
