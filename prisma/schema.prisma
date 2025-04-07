@@ -14,6 +14,12 @@ enum Workspace_Roles {
   Member
 }
 
+enum Priority {
+  Low
+  Medium
+  High
+}
+
 enum Project_Roles {
   Project_Manager
   Team_Lead
@@ -121,6 +127,7 @@ model Tasks {
   status_id   Int
   status      Status      @relation("TaskStatus", fields: [status_id], references: [id])
   Task_User   Task_User[] @relation("TaskUser")
+  priority    Priority    @default(Medium)
 }
 
 model Task_User {

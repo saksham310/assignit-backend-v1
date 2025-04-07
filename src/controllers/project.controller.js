@@ -6,6 +6,28 @@ const defaultValues = [
     {name: 'Completed', type: 'Completed', color: '#008844'},
 ]
 
+const projectTaskCountByStatus = async (id, statusType) => {
+  const count = await prisma.tasks.count({
+        where: {
+            sprint: {
+                project_id: id
+            },
+            status: {
+                type: statusType
+            }
+        }
+    });
+return count;
+}
+
+const projectTaskCountByPriority = async (priority) => {
+    const count = await prisma.tasks.count({
+        where: {
+            priority: priority
+        }
+    })
+    return count;
+}
 export const createProject = async (req, res) => {
     try {
         const {name, startDate, dueDate, workspaceId, customStatus} = req.body;
@@ -79,53 +101,18 @@ export const getProjects = async (req, res) => {
         })
         const projectsWithTaskCounts = await Promise.all(
             projects.map(async (project) => {
-                const totalTasks = await prisma.tasks.count({
-                    where: {
-                        sprint: {
-                            project_id: project.id
-                        }
-                    }
-                });
+                const toDoTasks = await projectTaskCountByStatus(project.id, 'To_Do')
 
-                const toDoTasks = await prisma.tasks.count({
-                    where: {
-                        sprint: {
-                            project_id: project.id
-                        },
-                        status: {
-                            type: "To_Do"
-                        }
-                    }
-                });
+                const inProgressTasks = await projectTaskCountByStatus(project.id, 'In_Progress')
 
-                const inProgressTasks = await prisma.tasks.count({
-                    where: {
-                        sprint: {
-                            project_id: project.id
-                        },
-                        status: {
-                            type: "In_Progress"
-                        }
-                    }
-                });
+                const completedTasks = await projectTaskCountByStatus(project.id, 'Completed')
 
-                const completedTasks = await prisma.tasks.count({
-                    where: {
-                        sprint: {
-                            project_id: project.id
-                        },
-                        status: {
-                            type: "Completed"
-                        }
-                    }
-                });
-
-                return  {
+                return {
                     ...project,
                     toDo: toDoTasks,
                     inProgress: inProgressTasks,
                     completed: completedTasks,
-            tasks: totalTasks,
+                    tasks: toDoTasks + inProgressTasks + completedTasks,
                 };
             })
         );
@@ -172,62 +159,15 @@ export const createSprint = async (req, res) => {
     }
 };
 
-export const getProjectTasks = async (req, res) => {
-   try {
-       const {projectId} = req.params;
-       const projectData = await prisma.project.findUnique({
-           where: { id: parseInt(projectId) },
-           include: {
-               sprint: {
-                   include: {
-                       Tasks: {
-                           include: {
-                                       Task_User: {
-                                           include: {
-                                               user: true,
-                                           }
-                                       }
-                                   }
-                               }
-                           }
-                       }
-                   }
-       });
-       const formattedProjectData = projectData.sprint.map((sprint) => ({
-           id: sprint.id,
-           name: sprint.name,
-           taskStatus: sprint.Tasks.map((status) => ({
-               name: status.name,
-               type: status.type,
-               color: status.color,
-               tasks: status.tasks.map((task) => ({
-                   id: task.id,
-                   name: task.name,
-                   assignees: task.Task_User.map((taskUser) => ({
-                       id: taskUser.user.id,
-                       username: taskUser.user.username,
-                       email: taskUser.user.email,
-                       image: taskUser.user.imageUrl,
-                       avatarColor: taskUser.user.avatarColor
-                   })),
-                   bugCount: 0,
-                   priority: 'high'
-               }))
-           }))
-       }));
-       return res.status(200).send(formattedProjectData)
-   }catch (err) {
-       console.error(err);
-       return res.status(500).json({message: 'Failed to get project tasks'});
-   }
-}
-
-export const getSprintTasks = async (req, res) => {
+export const getProjectDetails = async (req, res) => {
     try {
-        const {sprintId} = req.params;
-        const sprintData = await prisma.sprint.findUnique({
-            where: {id: parseInt(sprintId)},
+        const {projectId} = req.params;
+        const projectData = await prisma.project.findUnique({
+            where: {id: parseInt(projectId)},
             include: {
+                status: true,
+                sprint: {
+                    include: {
                         Tasks: {
                             include: {
                                 Task_User: {
@@ -238,6 +178,87 @@ export const getSprintTasks = async (req, res) => {
                             }
                         }
                     }
+                }
+            }
+        });
+        const toDoTasks = await projectTaskCountByStatus(projectData.id, 'To_Do')
+
+        const inProgressTasks = await projectTaskCountByStatus(projectData.id, 'In_Progress')
+
+        const completedTasks = await projectTaskCountByStatus(projectData.id, 'Completed')
+        const lowPriorityTask = await  projectTaskCountByPriority('Low')
+        const highPriorityTask = await  projectTaskCountByPriority('High')
+        const mediumPriorityTask = await  projectTaskCountByPriority('Medium')
+        const memberCount = await prisma.project_User.count({
+            where:{
+                project_id: projectData.id,
+            }
+        })
+        const projectOverviewData = {
+            id: projectData.id,
+            name: projectData.name,
+            startDate: projectData.startDate,
+            updatedAt: projectData.updatedAt,
+            dueDate: projectData.dueDate,
+            toDo: toDoTasks,
+            inProgress: inProgressTasks,
+            completed: completedTasks,
+            tasks: toDoTasks+inProgressTasks+completedTasks,
+            highPriority: highPriorityTask,
+            lowPriority: lowPriorityTask,
+            mediumPriority:mediumPriorityTask,
+            members: memberCount,
+        }
+        const projectSprintSummary = projectData.sprint.map((sprint) => ({
+            id: sprint.id,
+            name: sprint.name,
+            taskStatus: projectData.status.map((status) => ({
+                name: status.name,
+                type: status.type,
+                color: status.color,
+                tasks: sprint.Tasks
+                    .filter((task) => task.status_id === status.id)
+                    .map((task) => ({
+                        id: task.id,
+                        name: task.name,
+                        assignees: task.Task_User.map((taskUser) => ({
+                            id: taskUser.user.id,
+                            username: taskUser.user.username,
+                            email: taskUser.user.email,
+                            image: taskUser.user.imageUrl,
+                            avatarColor: taskUser.user.avatarColor
+                        })),
+                        bugCount: 0,
+                        priority: task.priority || 'high'
+                    }))
+            }))
+        }));
+        return res.status(200).send({
+            projectOverviewData,
+            projectSprintSummary,
+        })
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({message: 'Failed to get project tasks'});
+    }
+}
+
+export const getSprintTasks = async (req, res) => {
+    try {
+        const {sprintId} = req.params;
+        const sprintData = await prisma.sprint.findUnique({
+            where: {id: parseInt(sprintId)},
+            include: {
+                Tasks: {
+                    include: {
+                        Task_User: {
+                            include: {
+                                user: true,
+                            }
+                        }
+                    }
+                }
+            }
         })
         const taskStatus = sprintData.Tasks.map((status) => ({
             name: status.name,
@@ -259,8 +280,44 @@ export const getSprintTasks = async (req, res) => {
         }))
         console.log(taskStatus);
         return res.status(200).send({taskStatus})
-    }catch (err) {
+    } catch (err) {
         console.error(err);
         return res.status(500).json({message: 'Failed to get sprint tasks'});
+    }
+}
+
+export const getProjectStatusMembers = async (req, res) => {
+    const {projectId} = req.params;
+    try {
+        const projectStatus = await prisma.status.findMany({
+            where: {project_id: parseInt(projectId)},
+            select:{
+                id: true,
+                name: true,
+                type: true,
+                color: true,
+            }
+        })
+        const projectMembers = await prisma.user.findMany({
+            where: {
+                projects: {
+                    some: {
+                        project_id: parseInt(projectId),
+                    },
+                },
+            },
+            select: {
+                id: true,
+                imageUrl: true,
+                avatarColor: true,
+                username: true,
+            },
+        });
+
+
+        return res.status(200).send({projectStatus, projectMembers})
+    }catch(err) {
+        console.error(err);
+        return res.status(500).json({message: 'Failed to get project status members'});
     }
 }
