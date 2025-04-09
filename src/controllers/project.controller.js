@@ -5,6 +5,11 @@ const defaultValues = [
     {name: 'In Progress', type: 'In_Progress', color: '#f9d171'},
     {name: 'Completed', type: 'Completed', color: '#008844'},
 ]
+const statusOrder = {
+    "Completed": 0,
+    "In_Progress": 1,
+    "To_Do": 2
+};
 
 const projectTaskCountByStatus = async (id, statusType) => {
   const count = await prisma.tasks.count({
@@ -228,10 +233,10 @@ export const getProjectDetails = async (req, res) => {
                             image: taskUser.user.imageUrl,
                             avatarColor: taskUser.user.avatarColor
                         })),
-                        bugCount: 0,
-                        priority: task.priority || 'high'
+                        bugCount: task.frontendBugCount + task.backendBugCount + task.databaseBugCount,
+                        priority: task.priority
                     }))
-            }))
+            })).sort((a, b) => statusOrder[a.type] - statusOrder[b.type])
         }));
         return res.status(200).send({
             projectOverviewData,
@@ -260,11 +265,18 @@ export const getSprintTasks = async (req, res) => {
                 }
             }
         })
-        const taskStatus = sprintData.Tasks.map((status) => ({
+        const project = await prisma.project.findUnique({
+            where: {id: sprintData.project_id},
+            include: {
+            status: true
+            },
+        })
+        const taskStatus = project.status.map((status) => ({
             name: status.name,
             type: status.type,
             color: status.color,
-            tasks: status.tasks.map((task) => ({
+            tasks: sprintData.Tasks.filter((task) => task.status_id === status.id)
+                .map((task) => ({
                 id: task.id,
                 name: task.name,
                 assignees: task.Task_User.map((taskUser) => ({
@@ -274,10 +286,10 @@ export const getSprintTasks = async (req, res) => {
                     image: taskUser.user.imageUrl,
                     avatarColor: taskUser.user.avatarColor
                 })),
-                bugCount: 0,
-                priority: 'high'
+                bugCount: task.frontendBugCount + task.backendBugCount + task.databaseBugCount,
+                priority: task.priority
             }))
-        }))
+        })).sort((a, b) => statusOrder[a.type] - statusOrder[b.type])
         console.log(taskStatus);
         return res.status(200).send({taskStatus})
     } catch (err) {

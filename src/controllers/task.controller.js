@@ -17,17 +17,17 @@ export const createTask = async (req, res) => {
                 }
             })
             if(!task) throw new Error("Error creating task");
-            const assigneesList = assignees.map((id)=> {
-                task_id:task.id;
-                user_id:parseInt(id)
-            })
+            const assigneesList = assignees.map((id)=> ({
+                task_id:task.id,
+                user_id:id
+            }))
             const assignee = await prisma.task_User.createMany({
                 data:assigneesList,
             })
             return {task,assignee}
         })
         return res.status(200).send({
-            message: 'Successfully created project',
+            message: 'Successfully created task',
             project: result.task,
             statusList: result.assignee
         });
