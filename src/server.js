@@ -6,6 +6,7 @@ import authMiddleware from "./middleware/auth.middleware.js";
 import workspaceRoute from "./routes/workspace.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import projectRoutes from "./routes/project.routes.js";
+import taskRoutes from "./routes/task.routes.js";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -20,6 +21,7 @@ app.use('/api/auth', authRoute);
 app.use('/api/workspaces', authMiddleware, workspaceRoute);
 app.use('/api/user', authMiddleware, userRoutes);
 app.use('/api/projects',authMiddleware,projectRoutes);
+app.use('/api/tasks',authMiddleware,taskRoutes);
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });

@@ -119,15 +119,18 @@ model Sprint {
 }
 
 model Tasks {
-  id          Int         @id @default(autoincrement())
-  name        String
-  description String
-  sprint_id   Int
-  sprint      Sprint      @relation("SprintTask", fields: [sprint_id], references: [id])
-  status_id   Int
-  status      Status      @relation("TaskStatus", fields: [status_id], references: [id])
-  Task_User   Task_User[] @relation("TaskUser")
-  priority    Priority    @default(Medium)
+  id               Int         @id @default(autoincrement())
+  name             String
+  description      String
+  sprint_id        Int
+  sprint           Sprint      @relation("SprintTask", fields: [sprint_id], references: [id])
+  status_id        Int
+  status           Status      @relation("TaskStatus", fields: [status_id], references: [id])
+  Task_User        Task_User[] @relation("TaskUser")
+  priority         Priority    @default(Medium)
+  frontendBugCount Int         @default(0)
+  backendBugCount  Int         @default(0)
+  databaseBugCount Int         @default(0)
 }
 
 model Task_User {
