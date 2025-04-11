@@ -121,7 +121,7 @@ model Sprint {
 model Tasks {
   id               Int         @id @default(autoincrement())
   name             String
-  description      String
+  description      String      @db.Text
   sprint_id        Int
   sprint           Sprint      @relation("SprintTask", fields: [sprint_id], references: [id])
   status_id        Int
