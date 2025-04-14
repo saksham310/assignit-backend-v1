@@ -93,7 +93,7 @@ export const sendOTP = async (req, res) => {
         const otp = generateOTP();
         const otp_expiry = new Date(Date.now() + 10 * 60 * 1000);
 
-        await prisma.user.update({
+       const userUpdate = await prisma.user.update({
             data: {
                 otp,
                 otp_expiry
@@ -103,14 +103,17 @@ export const sendOTP = async (req, res) => {
             }
         })
 
-        const emailTemplate = generateResetPasswordEmail(user.username, user.otp);
-        const status = await sendEmail(' AssignIt Password Reset OTP', emailTemplate, email);
+       if (userUpdate) {
+           const emailTemplate = generateResetPasswordEmail(userUpdate.username, userUpdate.otp);
+           const status = await sendEmail(' AssignIt Password Reset OTP', emailTemplate, email);
 
-        if (status.success) {
-            return res.status(200).json({message: "Verification has been sent to your email"});
-        } else {
-            return res.status(500).json({message: 'Internal Server Error'});
-        }
+           if (status.success) {
+               return res.status(200).json({message: "Verification has been sent to your email"});
+           } else {
+               return res.status(500).json({message: 'Internal Server Error'});
+           }
+       }
+       return res.status(200).json({message: "Verification has been sent to your email"});
     } catch (err) {
         console.error("Error in sending OTP:", err.message);
         return res.status(200).json({message: "Verification has been sent to your email"});

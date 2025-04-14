@@ -107,12 +107,6 @@ export const updateTask = async (req, res) => {
                 id:parseInt(id),
             }
         })
-        const user = await prisma.user.findUnique({
-            where:{
-                id:req.userId,
-            }
-        })
-
 
         const task = await prisma.tasks.update({
             where: { id: parseInt(id) },
