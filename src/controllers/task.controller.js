@@ -1,4 +1,5 @@
 import prisma from "../prismaClient.js";
+import {uploadImage} from "../utils/image.uploader.js";
 
 export const createTask = async (req, res) => {
     try{
@@ -101,17 +102,53 @@ export const updateTask = async (req, res) => {
         const { id } = req.params;
         const { assignees, ...taskData } = req.body;
 
-        // Step 1: Update the task
+        const oldTask = await prisma.tasks.findUnique({
+            where:{
+                id:parseInt(id),
+            }
+        })
+        const user = await prisma.user.findUnique({
+            where:{
+                id:req.userId,
+            }
+        })
+
+
         const task = await prisma.tasks.update({
             where: { id: parseInt(id) },
             data: { ...taskData },
         });
+        const activityLog = [];
+        if (taskData.name && taskData.name !== oldTask.name) {
+            activityLog.push(`updated the task title.`);
+        }
+
+        if (taskData.description && taskData.description !== oldTask.description) {
+            activityLog.push(`updated the task description.`);
+        }
 
 
-        // Step 2: Handle assignee changes if provided
+        if (taskData.status_id && taskData.status_id !== oldTask.status_id) {
+            const oldStatus = await prisma.status.findUnique({
+                where:{
+                    id:oldTask.status_id
+                }
+            })
+            const newStatus = await prisma.status.findUnique({
+                where:{
+                    id:taskData.status_id
+                }
+            })
+            activityLog.push(` updated the status from ${oldStatus.name} to ${newStatus.name}.`);
+
+        }
+
+        if (taskData.priority && taskData.priority !== oldTask.priority) {
+            activityLog.push(`updated the priority from ${oldTask.priority} to ${taskData.priority}.`);
+        }
+
+        //  Handle assignee changes if provided
         if (assignees) {
-
-
             await prisma.$transaction(async (prisma) => {
                 // Delete existing assignees for this task
                 const deleted = await prisma.task_User.deleteMany({
@@ -129,12 +166,23 @@ export const updateTask = async (req, res) => {
                     const result = await prisma.task_User.createMany({
                         data: assigneesList,
                     });
+                    activityLog.push(` updated the  users assigned to the task.`);
 
 
                 }
             });
         }
-
+        const activityData = activityLog.map((taskLog) => ({
+            message: taskLog,
+            type: 'activity',
+            task_id: parseInt(id),
+            user_id: req.userId
+        }));
+        if (activityData.length > 0) {
+            await prisma.task_Comment.createMany({
+                data: activityData
+            });
+        }
         // Return success response
         return res.status(200).send({ message: 'Task updated successfully', task });
     } catch (err) {
@@ -142,3 +190,59 @@ export const updateTask = async (req, res) => {
         res.status(400).send({ message: 'Error updating task' });
     }
 };
+
+export const addComment = async (req, res) => {
+    try{
+        const {message,type} = req.body;
+        const {id} = req.params;
+        let attachment;
+        if(req.file){
+            const fileBuffer = req.file.buffer;
+            attachment=await uploadImage(fileBuffer);
+        }
+        const comment = await prisma.task_Comment.create({
+            data:{
+                message,
+                type,
+                task_id: parseInt(id),
+                user_id:req.userId,
+                attachment:attachment ?? null,
+            }
+        })
+        return res.status(200).send({message: 'Comment added successfully',comment});
+    }
+catch(err){
+        console.error("Error in task addComment:", err);
+        res.status(400).send({message: 'Error adding comment'});
+}
+}
+
+export const getAllComments = async (req, res) => {
+    try{
+        const {id} = req.params;
+        const comments = await prisma.task_Comment.findMany({
+            where:{
+                task_id: parseInt(id),
+            },
+            include:{
+                user:true
+            }
+        })
+
+        const formattedComments = comments.map((comment) => ({
+            id: comment.id,
+            name: comment.user.username,
+            message:comment.message,
+            createdAt: comment.createdAt,
+            type: comment.type,
+            userImage: comment.user.imageUrl ?? "",
+            avatarColor: comment.user.avatarColor ?? null,
+            attachment: comment.attachment ?? null,
+        }))
+
+        return res.status(200).send(formattedComments);
+    }catch(err){
+        console.error("Error in task getAllComments:", err);
+        res.status(400).send({message: 'Error fetching all comments'});
+    }
+}

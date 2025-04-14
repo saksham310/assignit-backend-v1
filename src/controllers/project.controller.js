@@ -272,6 +272,7 @@ export const getSprintTasks = async (req, res) => {
             },
         })
         const taskStatus = project.status.map((status) => ({
+            id: status.id,
             name: status.name,
             type: status.type,
             color: status.color,
@@ -290,7 +291,6 @@ export const getSprintTasks = async (req, res) => {
                 priority: task.priority
             }))
         })).sort((a, b) => statusOrder[a.type] - statusOrder[b.type])
-        console.log(taskStatus);
         return res.status(200).send({taskStatus})
     } catch (err) {
         console.error(err);

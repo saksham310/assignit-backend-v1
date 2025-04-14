@@ -36,20 +36,26 @@ enum Status_Types {
   Completed
 }
 
+enum Comment_Types {
+  comment
+  activity
+}
+
 model User {
-  id          Int              @id @default(autoincrement())
-  email       String           @unique
-  password    String
-  username    String           @unique
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  otp         String?
-  otp_expiry  DateTime?
-  imageUrl    String?
-  avatarColor String?
-  workspaces  Workspace_User[] @relation("WorkspaceUser")
-  projects    Project_User[]   @relation("ProjectUser")
-  Task_User   Task_User[]      @relation("TaskUser")
+  id           Int              @id @default(autoincrement())
+  email        String           @unique
+  password     String
+  username     String           @unique
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  otp          String?
+  otp_expiry   DateTime?
+  imageUrl     String?
+  avatarColor  String?
+  workspaces   Workspace_User[] @relation("WorkspaceUser")
+  projects     Project_User[]   @relation("ProjectUser")
+  Task_User    Task_User[]      @relation("TaskUser")
+  Task_Comment Task_Comment[]   @relation("UserComment")
 }
 
 model Workspace {
@@ -131,6 +137,8 @@ model Tasks {
   frontendBugCount Int         @default(0)
   backendBugCount  Int         @default(0)
   databaseBugCount Int         @default(0)
+
+  Task_Comment Task_Comment[] @relation("TaskComment")
 }
 
 model Task_User {
@@ -141,4 +149,17 @@ model Task_User {
   task_id Int
 
   @@unique([task_id, user_id])
+}
+
+model Task_Comment {
+  id         Int           @id @default(autoincrement())
+  user       User          @relation("UserComment", fields: [user_id], references: [id])
+  user_id    Int
+  task       Tasks         @relation("TaskComment", fields: [task_id], references: [id])
+  task_id    Int
+  message    String
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  type       Comment_Types
+  attachment String?
 }
