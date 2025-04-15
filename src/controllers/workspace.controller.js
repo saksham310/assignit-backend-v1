@@ -217,19 +217,21 @@ export const getWorkspaceMembers = async (req, res) => {
 export const leaveWorkspace = async (req, res) => {
     try {
         const workspaceId = parseInt(req.params.workspaceId);
+        await prisma.project_User.deleteMany({
+            where: {
+                user_id: req.userId,
+                project: {
+                    workspace_id: workspaceId,
+                }
+            }
+        })
         await prisma.workspace_User.deleteMany({
             where: {
                 workspace_id: workspaceId,
                 user_id: req.userId
             }
         })
-        await prisma.project_User.deleteMany({
-            where: {
-                project: {
-                    workspace_id: workspaceId,
-                }
-            }
-        })
+
         return res.status(200).json({message: 'Workspace left successfully'});
     } catch (e) {
         console.log(e);
@@ -243,6 +245,25 @@ export const updateUserRole = async (req, res) => {
 
         if (!newRole || !id) {
             return res.status(400).json({ message: 'Invalid request data' });
+        }
+        if(newRole === "Remove"){
+            await prisma.project_User.deleteMany({
+                where: {
+                    user_id: parseInt(id),
+                    project: {
+                        workspace_id: req.w_id
+                    }
+                }
+            });
+            await prisma.workspace_User.delete({
+                where: {
+                    workspace_id_user_id:{
+                        workspace_id: req.w_id,
+                        user_id: parseInt(id)
+                    }
+                }
+            })
+            return res.status(200).json({ message: 'User removed successfully' });
         }
         if (!WORKSPACE_ROLES.includes(newRole)) {
             return res.status(400).json({ message: 'Invalid role. Please try again' });

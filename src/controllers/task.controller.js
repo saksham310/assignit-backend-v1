@@ -4,7 +4,7 @@ import {uploadImage} from "../utils/image.uploader.js";
 export const createTask = async (req, res) => {
     try{
         const {name,description,priority,status_id,assignees,sprint_id}=req.body;
-        if(!name || !description || !priority || !status_id || !assignees || !sprint_id){
+        if(!name ||  !priority || !status_id ||  !sprint_id){
             return res.status(400).send({error: 'Missing required field.'});
         }
         const result = await prisma.$transaction(async(prisma) =>{

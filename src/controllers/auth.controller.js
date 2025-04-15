@@ -106,7 +106,6 @@ export const sendOTP = async (req, res) => {
        if (userUpdate) {
            const emailTemplate = generateResetPasswordEmail(userUpdate.username, userUpdate.otp);
            const status = await sendEmail(' AssignIt Password Reset OTP', emailTemplate, email);
-
            if (status.success) {
                return res.status(200).json({message: "Verification has been sent to your email"});
            } else {
