@@ -160,7 +160,7 @@ export const getWorkSpaceAnalytics = async (req, res) => {
             where: {
                 workspace_id: id,
                 dueDate: {
-                    gte: new Date(),
+                    lte: new Date(),
                 },
             }
         })
@@ -192,6 +192,8 @@ export const getWorkspaceMembers = async (req, res) => {
                        email: true,
                        username: true,
                        id: true,
+                       imageUrl: true,
+                       avatarColor: true,
                    }
                }
            }
@@ -203,6 +205,8 @@ export const getWorkspaceMembers = async (req, res) => {
                email: u.user.email,
                joinDate: u.joinDate.toISOString().split('T')[0],
                role: u.role,
+               avatarColor: u.user.avatarColor,
+               imageUrl: u.user.imageUrl,
 
 
            }

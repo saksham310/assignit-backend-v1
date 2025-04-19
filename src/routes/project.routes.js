@@ -4,13 +4,14 @@ import {
     createSprint,
     getProjects,
     getProjectDetails,
-    getSprintTasks, getProjectStatusMembers
+    getSprintTasks, getProjectStatusMembers, getProjectMembers
 } from "../controllers/project.controller.js";
 
 const router = express.Router();
 
 router.post("/",createProject);
 router.get("/:workspaceId",getProjects);
+router.get('/:projectId/members',getProjectMembers);
 router.post("/sprint",createSprint);
 router.get("/:projectId/details",getProjectDetails);
 router.get("/sprint/:sprintId/tasks",getSprintTasks);

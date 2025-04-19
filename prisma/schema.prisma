@@ -100,6 +100,7 @@ model Project_User {
   project    Project       @relation("ProjectUser", fields: [project_id], references: [id])
   project_id Int
   role       Project_Roles @default(Unassigned)
+  joinDate   DateTime      @default(now())
 
   @@unique([project_id, user_id])
 }
@@ -115,13 +116,14 @@ model Status {
 }
 
 model Sprint {
-  id         Int      @id @default(autoincrement())
-  name       String
-  project    Project  @relation("ProjectSprint", fields: [project_id], references: [id])
-  project_id Int
-  startDate  DateTime
-  endDate    DateTime
-  Tasks      Tasks[]  @relation("SprintTask")
+  id              Int               @id @default(autoincrement())
+  name            String
+  project         Project           @relation("ProjectSprint", fields: [project_id], references: [id])
+  project_id      Int
+  startDate       DateTime
+  endDate         DateTime
+  Tasks           Tasks[]           @relation("SprintTask")
+  Sprint_Feedback Sprint_Feedback[] @relation("SprintFeedback")
 }
 
 model Tasks {
@@ -162,4 +164,13 @@ model Task_Comment {
   updatedAt  DateTime      @updatedAt
   type       Comment_Types
   attachment String?
+}
+
+model Sprint_Feedback {
+  id          Int    @id @default(autoincrement())
+  sprint_id   Int
+  sprint      Sprint @relation("SprintFeedback", fields: [sprint_id], references: [id])
+  wentWell    String
+  toImprove   String
+  actionItems String
 }
