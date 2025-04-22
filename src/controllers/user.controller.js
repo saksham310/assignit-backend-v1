@@ -111,6 +111,11 @@ export const userProfileAnalytics = async (req, res) => {
         const taskUsers = await prisma.task_User.findMany({
             where: {
                 user_id: userId,
+                task: {
+                    sprint: {
+                        project_id: parseInt(projectId),
+                    },
+                },
             },
             select: {
                 task: {

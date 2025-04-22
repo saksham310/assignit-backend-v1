@@ -412,3 +412,67 @@ export const getProjectMembers = async (req, res) => {
         return res.status(500).json({message: 'Failed to get project members'});
     }
 }
+export const projectRetrospective = async (req, res) => {
+    try {
+     const {workspaceId} = req.params;
+     const projects = await prisma.project.findMany({
+         where: {
+             workspace_id: parseInt(workspaceId),
+             users:{
+                 some:{
+                     user_id:req.userId
+                 }
+             }
+         },
+         select: {
+             id: true,
+             name: true,
+             sprint:{
+                select:{
+                    id:true,
+                    name:true,
+                }
+             },
+             users:{
+                where:{
+                    user_id:req.userId
+                },
+                select:{
+                    role:true
+                }
+             }
+         }
+     })
+     return res.status(200).json({projects})
+ 
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({message: 'Internal Server Error'});
+     
+    }
+ }
+
+ export const createSprintRetrospective = async (req, res) => {
+try {
+    const {sprintId, ...retrospective} = req.body;
+    const sprint = await prisma.sprint.findUnique({
+        where: {
+            id: parseInt(sprintId)
+        }
+    })
+    if (!sprint) {
+        return res.status(422).json({message: 'Sprint not found'});
+    }
+    const retrospectiveData = await prisma.sprint_Feedback.create({
+        data: {
+            sprint_id: parseInt(sprintId),
+            ...retrospective
+        }
+    })
+    return res.status(200).json({message: 'Successfully submitted', retrospectiveData})
+} catch (error) {
+    console.log(error);
+    return res.status(500).json({message: 'Internal Server Error'});
+    
+} 
+}
