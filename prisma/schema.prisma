@@ -167,10 +167,11 @@ model Task_Comment {
 }
 
 model Sprint_Feedback {
-  id          Int    @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   sprint_id   Int
-  sprint      Sprint @relation("SprintFeedback", fields: [sprint_id], references: [id])
+  sprint      Sprint   @relation("SprintFeedback", fields: [sprint_id], references: [id])
   wentWell    String
   toImprove   String
   actionItems String
+  createdAt   DateTime @default(now())
 }

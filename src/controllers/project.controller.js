@@ -89,6 +89,49 @@ export const createProject = async (req, res) => {
     }
 };
 
+export const updateStatus = async (req, res) => {
+    try {
+        const {customStatus} = req.body;
+        console.log(customStatus);
+        const {projectId} = req.params;
+        const operations = customStatus?.map((status) => {
+            const data = {
+                name: status.name,
+                type: status.type,
+                color: status.color,
+            };
+
+            if (status.id) {
+                if (!status.name) {
+                    return prisma.status.delete({
+                        where: {
+                            id: status.id,
+                        }
+                    })
+                }
+                return prisma.status.update({
+                    where: {id: status.id},
+                    data,
+                });
+            } else {
+                if (!status.name) return
+                return prisma.status.create({
+                    data: {
+                        ...data,
+                        project_id: parseInt(projectId),
+                    },
+                });
+            }
+        });
+
+        await Promise.all(operations);
+        return res.status(200).send({message: 'Status updated successfully'});
+    } catch (err) {
+        console.error(err);
+        return res.status(500).send({message: 'Failed to update status'});
+    }
+
+}
 export const getProjects = async (req, res) => {
     const {workspaceId} = req.params;
     try {
@@ -359,7 +402,7 @@ export const getProjectMembers = async (req, res) => {
         const project = await prisma.project.findUnique({
             where: {id: parseInt(projectId)},
             select: {
-                workspace_id:true
+                workspace_id: true
             }
         })
         const projectMemberIds = projectMembers.map((pm) => pm.user.id);
@@ -372,7 +415,7 @@ export const getProjectMembers = async (req, res) => {
             },
             select: {
                 role: true,
-                user:{
+                user: {
                     select: {
                         id: true,
                         email: true,
@@ -383,7 +426,7 @@ export const getProjectMembers = async (req, res) => {
                 }
             }
         })
-        const currentMembers = projectMembers.map(u=>{
+        const currentMembers = projectMembers.map(u => {
             return {
                 id: u.user.id,
                 name: u.user.username,
@@ -395,18 +438,17 @@ export const getProjectMembers = async (req, res) => {
 
             }
         })
-        const remainingMembers = workspaceMembers.map((u)=>{
-         return {
-             id: u.user.id,
-             name: u.user.username,
-             email: u.user.email,
-             avatarColor: u.user.avatarColor,
-             imageUrl: u.user.imageUrl,
-         }
+        const remainingMembers = workspaceMembers.map((u) => {
+            return {
+                id: u.user.id,
+                username: u.user.username,
+                email: u.user.email,
+                avatarColor: u.user.avatarColor,
+                imageUrl: u.user.imageUrl,
+            }
         })
-        const userRole = projectMembers.find(u => u.user.id === req.userId).role
-        console.log(userRole)
-        return res.status(200).send({currentMembers, remainingMembers,userRole})
+        const userRole = projectMembers.find(u => u.user.id === req.userId)?.role
+        return res.status(200).send({currentMembers, remainingMembers, userRole})
     } catch (err) {
         console.error(err);
         return res.status(500).json({message: 'Failed to get project members'});
@@ -414,65 +456,82 @@ export const getProjectMembers = async (req, res) => {
 }
 export const projectRetrospective = async (req, res) => {
     try {
-     const {workspaceId} = req.params;
-     const projects = await prisma.project.findMany({
-         where: {
-             workspace_id: parseInt(workspaceId),
-             users:{
-                 some:{
-                     user_id:req.userId
-                 }
-             }
-         },
-         select: {
-             id: true,
-             name: true,
-             sprint:{
-                select:{
-                    id:true,
-                    name:true,
+        const {workspaceId} = req.params;
+        const projects = await prisma.project.findMany({
+            where: {
+                workspace_id: parseInt(workspaceId),
+                users: {
+                    some: {
+                        user_id: req.userId
+                    }
                 }
-             },
-             users:{
-                where:{
-                    user_id:req.userId
+            },
+            select: {
+                id: true,
+                name: true,
+                sprint: {
+                    select: {
+                        id: true,
+                        name: true,
+                    }
                 },
-                select:{
-                    role:true
+                users: {
+                    where: {
+                        user_id: req.userId
+                    },
+                    select: {
+                        role: true
+                    }
                 }
-             }
-         }
-     })
-     return res.status(200).json({projects})
- 
+            }
+        })
+        return res.status(200).json({projects})
+
     } catch (error) {
         console.log(error);
         return res.status(500).json({message: 'Internal Server Error'});
-     
-    }
- }
 
- export const createSprintRetrospective = async (req, res) => {
-try {
-    const {sprintId, ...retrospective} = req.body;
-    const sprint = await prisma.sprint.findUnique({
-        where: {
-            id: parseInt(sprintId)
-        }
-    })
-    if (!sprint) {
-        return res.status(422).json({message: 'Sprint not found'});
     }
-    const retrospectiveData = await prisma.sprint_Feedback.create({
-        data: {
-            sprint_id: parseInt(sprintId),
-            ...retrospective
+}
+
+export const createSprintRetrospective = async (req, res) => {
+    try {
+        const {sprintId, ...retrospective} = req.body;
+        const sprint = await prisma.sprint.findUnique({
+            where: {
+                id: parseInt(sprintId)
+            }
+        })
+        if (!sprint) {
+            return res.status(422).json({message: 'Sprint not found'});
         }
-    })
-    return res.status(200).json({message: 'Successfully submitted', retrospectiveData})
-} catch (error) {
-    console.log(error);
-    return res.status(500).json({message: 'Internal Server Error'});
-    
-} 
+        const retrospectiveData = await prisma.sprint_Feedback.create({
+            data: {
+                sprint_id: parseInt(sprintId),
+                ...retrospective
+            }
+        })
+        return res.status(200).json({message: 'Successfully submitted', retrospectiveData})
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({message: 'Internal Server Error'});
+
+    }
+}
+export const getRetroFeedbacks = async (req, res) => {
+    try {
+        const {sprintId} = req.params;
+        const responses = await prisma.sprint_Feedback.findMany({
+            where: {
+                sprint_id: parseInt(sprintId)
+            },
+        })
+        if (!responses) {
+            return res.status(422).json({message: 'Failed to get feedbacks'});
+        }
+        return res.status(200).json({responses})
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({message: 'Internal Server Error'});
+    }
 }
