@@ -81,16 +81,17 @@ model Workspace_User {
 }
 
 model Project {
-  id           Int            @id @default(autoincrement())
-  name         String
-  startDate    DateTime
-  updatedAt    DateTime       @updatedAt
-  dueDate      DateTime
-  users        Project_User[] @relation("ProjectUser")
-  workspace    Workspace      @relation("WorkspaceProjects", fields: [workspace_id], references: [id])
-  workspace_id Int
-  status       Status[]       @relation("ProjectStatus")
-  sprint       Sprint[]       @relation("ProjectSprint")
+  id             Int            @id @default(autoincrement())
+  name           String
+  startDate      DateTime
+  updatedAt      DateTime       @updatedAt
+  dueDate        DateTime
+  users          Project_User[] @relation("ProjectUser")
+  workspace      Workspace      @relation("WorkspaceProjects", fields: [workspace_id], references: [id])
+  workspace_id   Int
+  status         Status[]       @relation("ProjectStatus")
+  sprint         Sprint[]       @relation("ProjectSprint")
+  idealTaskCount Int            @default(3)
 }
 
 model Project_User {

@@ -132,9 +132,19 @@ export const userProfileAnalytics = async (req, res) => {
             if (!task) return acc;
             return acc + task.frontendBugCount + task.backendBugCount + task.databaseBugCount;
         }, 0);
+        const project = await prisma.project.findUnique({
+            where: {
+                id: parseInt(projectId),
+            },
+            select: {
+                idealTaskCount: true,
+            }
+        })
+        console.log(project)
         const details = {
             ...user,
             sprintCount: sprint,
+            idealTaskCount:project.idealTaskCount,
             ...role,
             tasks: {
                 total: await prisma.tasks.count({

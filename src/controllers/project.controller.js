@@ -347,6 +347,16 @@ export const getSprintTasks = async (req, res) => {
 export const getProjectStatusMembers = async (req, res) => {
     const {projectId} = req.params;
     try {
+        const project = await prisma.project.findUnique({
+            where: {id: parseInt(projectId)},
+            select: {
+                name: true,
+                idealTaskCount: true,
+            }
+        })
+        if (!project) {
+            return res.status(422).send({message: 'Something went wrong!'});
+        }
         const projectStatus = await prisma.status.findMany({
             where: {project_id: parseInt(projectId)},
             select: {
@@ -373,13 +383,34 @@ export const getProjectStatusMembers = async (req, res) => {
         });
 
 
-        return res.status(200).send({projectStatus, projectMembers})
+        return res.status(200).send({name:project.name,idealTaskCount:project.idealTaskCount,projectStatus, projectMembers})
     } catch (err) {
         console.error(err);
         return res.status(500).json({message: 'Failed to get project status members'});
     }
 }
-
+export const updateProject = async (req, res) => {
+   try {
+       const project = await prisma.project.findUnique({
+           where:{
+               id: parseInt(req.params.projectId),
+           }
+       })
+       if (!project) {
+           return res.status(422).send({message: 'Something went wrong!'});
+       }
+        const updateProject = await prisma.project.update({
+            where: {id: parseInt(req.params.projectId)},
+            data: {
+                ...req.body,
+            }
+        })
+       return  res.status(200).send({message: 'Successfully updated project task',updateProject});
+   }catch (err) {
+       console.error(err);
+       return res.status(500).json({message: 'Failed to update project'});
+   }
+}
 export const getProjectMembers = async (req, res) => {
     const {projectId} = req.params;
     try {

@@ -5,13 +5,14 @@ import {
     getProjects,
     getProjectDetails,
     getSprintTasks, getProjectStatusMembers, getProjectMembers,
-    projectRetrospective, createSprintRetrospective, getRetroFeedbacks, updateStatus
+    projectRetrospective, createSprintRetrospective, getRetroFeedbacks, updateStatus, updateProject
 } from "../controllers/project.controller.js";
 
 const router = express.Router();
 
 router.post("/",createProject);
 router.get("/:workspaceId",getProjects);
+router.put("/:projectId",updateProject);
 router.get('/:projectId/members',getProjectMembers);
 router.post("/:projectId/status/update",updateStatus);
 router.post("/sprint",createSprint);
