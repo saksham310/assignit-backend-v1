@@ -25,10 +25,13 @@ const projectTaskCountByStatus = async (id, statusType) => {
     return count;
 }
 
-const projectTaskCountByPriority = async (priority) => {
+const projectTaskCountByPriority = async (id,priority) => {
     const count = await prisma.tasks.count({
         where: {
-            priority: priority
+            priority: priority,
+            sprint: {
+                project_id: id
+            },
         }
     })
     return count;
@@ -144,7 +147,8 @@ export const getProjects = async (req, res) => {
                     }
                 }
             }, include: {
-                sprint: true
+                sprint: true,
+                users:true
             }
         })
         const projectsWithTaskCounts = await Promise.all(
@@ -161,6 +165,7 @@ export const getProjects = async (req, res) => {
                     inProgress: inProgressTasks,
                     completed: completedTasks,
                     tasks: toDoTasks + inProgressTasks + completedTasks,
+                    role:project.users.filter(user => user.user_id === req.userId)[0].role
                 };
             })
         );
@@ -237,9 +242,9 @@ export const getProjectDetails = async (req, res) => {
         const inProgressTasks = await projectTaskCountByStatus(projectData.id, 'In_Progress')
 
         const completedTasks = await projectTaskCountByStatus(projectData.id, 'Completed')
-        const lowPriorityTask = await projectTaskCountByPriority('Low')
-        const highPriorityTask = await projectTaskCountByPriority('High')
-        const mediumPriorityTask = await projectTaskCountByPriority('Medium')
+        const lowPriorityTask = await projectTaskCountByPriority(projectData.id,'Low')
+        const highPriorityTask = await projectTaskCountByPriority(projectData.id,'High')
+        const mediumPriorityTask = await projectTaskCountByPriority(projectData.id,'Medium')
         const memberCount = await prisma.project_User.count({
             where: {
                 project_id: projectData.id,
@@ -563,6 +568,60 @@ export const getRetroFeedbacks = async (req, res) => {
         return res.status(200).json({responses})
     } catch (err) {
         console.log(err);
+        return res.status(500).json({message: 'Internal Server Error'});
+    }
+}
+
+export const addProjectMembers = async (req, res) => {
+    try{
+     const members = req.body;
+    const {projectId} = req.params;
+    const id = parseInt(projectId);
+    const newMembers = members.map((member) => ({
+        project_id : id,
+        user_id: member
+    }))
+        const updatedMembers = await prisma.project_User.createMany({
+            data:newMembers
+        })
+     return res.status(200).json({message: 'Successfully added members', members})
+    }catch (error) {
+        console.log(error);
+        return res.status(500).json({message: 'Internal Server Error'});
+    }
+}
+
+export const updateMemberRole = async (req, res) => {
+    try {
+        const {memberId, role} = req.body;
+        const {projectId} = req.params;
+        if (!memberId || !role) {
+            return res.status(422).json({message: 'Failed to update the role'});
+        }
+        if(role === "Remove"){
+            await prisma.project_User.deleteMany({
+                where: {
+                    user_id: parseInt(memberId),
+                    project_id: parseInt(projectId)
+                }
+            });
+        return res.status(200).json({message: 'Successfully removed member'})
+        }
+        await prisma.project_User.update({
+            data: {
+                role: role,
+            },
+            where: {
+                project_id_user_id: {
+                    project_id: parseInt(projectId),
+                    user_id: parseInt(memberId),
+                },
+            }
+        })
+        return res.status(200).json({message: `Successfully updated member's role`})
+    }
+    catch (error) {
+        console.log(error);
         return res.status(500).json({message: 'Internal Server Error'});
     }
 }

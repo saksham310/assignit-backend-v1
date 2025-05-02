@@ -187,12 +187,25 @@ export const updateTask = async (req, res) => {
 
 export const addComment = async (req, res) => {
     try{
-        const {message,type} = req.body;
+        const {message,type,comment_id} = req.body;
         const {id} = req.params;
         let attachment;
         if(req.file){
             const fileBuffer = req.file.buffer;
             attachment=await uploadImage(fileBuffer);
+        }
+        if(comment_id){
+            const comment = await prisma.task_Comment.update({
+                where:{
+                    id :parseInt(comment_id),
+                },
+                data:{
+                    message,
+                    type,
+                    attachment:attachment ?? null,
+                }
+            })
+            return res.status(200).send({message: 'Comment updated successfully',comment});
         }
         const comment = await prisma.task_Comment.create({
             data:{
@@ -220,6 +233,9 @@ export const getAllComments = async (req, res) => {
             },
             include:{
                 user:true
+            },
+            orderBy: {
+                createdAt: 'asc' // ascending: oldest to newest
             }
         })
 
@@ -232,6 +248,7 @@ export const getAllComments = async (req, res) => {
             userImage: comment.user.imageUrl ?? "",
             avatarColor: comment.user.avatarColor ?? null,
             attachment: comment.attachment ?? null,
+            userId: comment.user.id,
         }))
 
         return res.status(200).send(formattedComments);
