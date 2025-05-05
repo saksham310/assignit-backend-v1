@@ -59,7 +59,7 @@ export const createProject = async (req, res) => {
             if (!project) throw new Error("Error creating project");
 
             // Prepare statuses
-            const statusList = (customStatus && customStatus.length > 0 ? customStatus : defaultValues).map(status => ({
+            const statusList = (customStatus && customStatus.length > 0 ? customStatus : defaultValues).map(({ id, ...status }) => ({
                 project_id: project.id,
                 ...status,
             }));

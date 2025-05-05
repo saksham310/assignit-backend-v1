@@ -202,7 +202,7 @@ export const addComment = async (req, res) => {
                 data:{
                     message,
                     type,
-                    attachment:attachment ?? null,
+                    attachment:attachment,
                 }
             })
             return res.status(200).send({message: 'Comment updated successfully',comment});
