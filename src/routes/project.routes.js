@@ -13,7 +13,8 @@ import {
     updateStatus,
     updateProject,
     addProjectMembers,
-    updateMemberRole
+    updateMemberRole,
+    deleteProject
 } from "../controllers/project.controller.js";
 
 const router = express.Router();
@@ -32,5 +33,6 @@ router.get("/:projectId/status",getProjectStatusMembers);
 router.get(`/:workspaceId/retrospective/`,projectRetrospective);
 router.post("/retrospective",createSprintRetrospective);
 router.get("/retrospective/:sprintId",getRetroFeedbacks);
+router.delete('/:projectId', deleteProject);
 
 export default router;

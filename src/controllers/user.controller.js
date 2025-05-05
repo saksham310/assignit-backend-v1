@@ -90,12 +90,37 @@ const userTaskCountByStatus = async (id, userId, sprintId,statusType) => {
 export const userProfileAnalytics = async (req, res) => {
     try {
         const {projectId,id,sprintId} = req.params;
-        const userId = parseInt(id)
+        const userId = parseInt(id);
+        
+        // Validate project exists
+        const project = await prisma.project.findUnique({
+            where: { id: parseInt(projectId) }
+        });
+
+        if (!project) {
+            return res.status(404).json({ message: 'Project not found' });
+        }
+
+        // If sprintId provided, validate it exists
+        if (sprintId) {
+            const sprint = await prisma.sprint.findUnique({
+                where: { 
+                    id: parseInt(sprintId),
+                    project_id: parseInt(projectId)
+                }
+            });
+            
+            if (!sprint) {
+                return res.status(404).json({ message: 'Sprint not found' });
+            }
+        }
+
         const sprint = await prisma.sprint.count({
             where: {
                 project_id: parseInt(projectId),
             }
-        })
+        });
+
         const user = await prisma.user.findUnique({
             where: {
                 id: userId,
@@ -107,7 +132,12 @@ export const userProfileAnalytics = async (req, res) => {
                 imageUrl: true,
                 avatarColor: true
             }
-        })
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
         const role = await prisma.project_User.findUnique({
             where: {
                 project_id_user_id: {
@@ -118,69 +148,47 @@ export const userProfileAnalytics = async (req, res) => {
             select: {
                 role: true
             }
-        })
-        let taskUsers
-        if(sprintId){
-            taskUsers = await prisma.task_User.findMany({
-                where: {
-                    user_id: userId,
-                    task: {
-                        sprint: {
-                            project_id: parseInt(projectId),
-                            id: parseInt(sprintId)
-                        },
-                    },
-                },
-                select: {
-                    task: {
-                        select: {
-                            frontendBugCount: true,
-                            backendBugCount: true,
-                            databaseBugCount: true,
-                        },
-                    },
-                },
-            });
-        }
-        else {
-            taskUsers = await prisma.task_User.findMany({
-                where: {
-                    user_id: userId,
-                    task: {
-                        sprint: {
-                            project_id: parseInt(projectId),
-                        },
-                    },
-                },
-                select: {
-                    task: {
-                        select: {
-                            frontendBugCount: true,
-                            backendBugCount: true,
-                            databaseBugCount: true,
-                        },
-                    },
-                },
-            });
-        }
+        });
+
+        const taskUsers = await prisma.task_User.findMany({
+            where: {
+                user_id: userId,
+                task: {
+                    sprint: {
+                        project_id: parseInt(projectId),
+                        ...(sprintId ? { id: parseInt(sprintId) } : {})
+                    }
+                }
+            },
+            select: {
+                task: {
+                    select: {
+                        frontendBugCount: true,
+                        backendBugCount: true,
+                        databaseBugCount: true,
+                    }
+                }
+            }
+        });
 
         const totalBugs = taskUsers.reduce((acc, { task }) => {
             if (!task) return acc;
             return acc + task.frontendBugCount + task.backendBugCount + task.databaseBugCount;
         }, 0);
-        const project = await prisma.project.findUnique({
+
+        const projectDetails = await prisma.project.findUnique({
             where: {
                 id: parseInt(projectId),
             },
             select: {
                 idealTaskCount: true,
             }
-        })
-        console.log(project)
+        });
+
         const details = {
             ...user,
             sprintCount: sprint,
-            idealTaskCount: project.idealTaskCount,
+            idealTaskCount: projectDetails.idealTaskCount,
             ...role,
             tasks: {
                 total: sprintId ? await prisma.tasks.count({
@@ -217,10 +225,50 @@ export const userProfileAnalytics = async (req, res) => {
                     name: true
                 }
             })
-        }
-        res.status(200).json({details})
+        };
+
+        res.status(200).json({details});
     } catch (error) {
-        console.log(error);
-        return res.status(500).json({message: 'Internal Server Error'});
+        console.error(error);
+        return res.status(500).json({ message: 'Internal server error' });
     }
 }
+
+export const deleteUser = async (req, res) => {
+    try {
+        await prisma.$transaction(async (prisma) => {
+            // Delete user from all tasks
+            await prisma.task_User.deleteMany({
+                where: {
+                    user_id: req.userId
+                }
+            });
+
+            // Delete user from all projects
+            await prisma.project_User.deleteMany({
+                where: {
+                    user_id: req.userId
+                }
+            });
+
+            // Delete user from all workspaces
+            await prisma.workspace_User.deleteMany({
+                where: {
+                    user_id: req.userId
+                }
+            });
+
+            // Finally delete the user
+            await prisma.user.delete({
+                where: {
+                    id: req.userId
+                }
+            });
+        });
+
+        return res.status(200).json({ message: 'Account and all associated data deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+};

@@ -635,3 +635,84 @@ export const updateMemberRole = async (req, res) => {
         return res.status(500).json({message: 'Internal Server Error'});
     }
 }
+
+export const deleteProject = async (req, res) => {
+    try {
+        const { projectId } = req.params;
+        
+        await prisma.$transaction(async (prisma) => {
+            // Delete all comments from tasks in this project
+            await prisma.task_Comment.deleteMany({
+                where: {
+                    task: {
+                        sprint: {
+                            project_id: parseInt(projectId)
+                        }
+                    }
+                }
+            });
+
+            // Delete all task-user associations
+            await prisma.task_User.deleteMany({
+                where: {
+                    task: {
+                        sprint: {
+                            project_id: parseInt(projectId)
+                        }
+                    }
+                }
+            });
+
+            // Delete all tasks
+            await prisma.tasks.deleteMany({
+                where: {
+                    sprint: {
+                        project_id: parseInt(projectId)
+                    }
+                }
+            });
+
+            // Delete sprint feedbacks
+            await prisma.sprint_Feedback.deleteMany({
+                where: {
+                    sprint: {
+                        project_id: parseInt(projectId)
+                    }
+                }
+            });
+
+            // Delete all sprints
+            await prisma.sprint.deleteMany({
+                where: {
+                    project_id: parseInt(projectId)
+                }
+            });
+
+            // Delete project status
+            await prisma.status.deleteMany({
+                where: {
+                    project_id: parseInt(projectId)
+                }
+            });
+
+            // Delete project-user associations
+            await prisma.project_User.deleteMany({
+                where: {
+                    project_id: parseInt(projectId)
+                }
+            });
+
+            // Finally delete the project
+            await prisma.project.delete({
+                where: {
+                    id: parseInt(projectId)
+                }
+            });
+        });
+        
+        return res.status(200).json({ message: 'Project and all associated data deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
