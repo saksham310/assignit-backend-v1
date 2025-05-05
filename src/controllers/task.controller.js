@@ -25,6 +25,27 @@ export const createTask = async (req, res) => {
             const assignee = await prisma.task_User.createMany({
                 data:assigneesList,
             })
+            
+            // Get the username of the user who created the task
+            const user = await prisma.user.findUnique({
+                where: {
+                    id: req.userId
+                },
+                select: {
+                    username: true
+                }
+            });
+            
+            // Add activity comment showing who created the task
+            await prisma.task_Comment.create({
+                data: {
+                    message: `created the task`,
+                    type: 'activity',
+                    task_id: task.id,
+                    user_id: req.userId
+                }
+            });
+            
             return {task,assignee}
         })
         return res.status(200).send({
