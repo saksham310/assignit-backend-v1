@@ -98,27 +98,27 @@ export const userProfileAnalytics = async (req, res) => {
         })
         const user = await prisma.user.findUnique({
             where: {
-                id: userId
+                id: userId,
             },
             select: {
-                id:true,
+                id: true,
                 email: true,
                 username: true,
                 imageUrl: true,
-                avatarColor:true
-
+                avatarColor: true
             }
         })
-            const role = await prisma.project_User.findUnique({
-                where: {
-                   project_id_user_id:{
-                       user_id: userId,
-                       project_id: parseInt(projectId),
-                   }
-                },select:{
-                    role:true
+        const role = await prisma.project_User.findUnique({
+            where: {
+                project_id_user_id: {
+                    user_id: userId,
+                    project_id: parseInt(projectId),
                 }
-            })
+            },
+            select: {
+                role: true
+            }
+        })
         let taskUsers
         if(sprintId){
             taskUsers = await prisma.task_User.findMany({
@@ -142,7 +142,7 @@ export const userProfileAnalytics = async (req, res) => {
                 },
             });
         }
-      else {
+        else {
             taskUsers = await prisma.task_User.findMany({
                 where: {
                     user_id: userId,
@@ -180,14 +180,14 @@ export const userProfileAnalytics = async (req, res) => {
         const details = {
             ...user,
             sprintCount: sprint,
-            idealTaskCount:project.idealTaskCount,
+            idealTaskCount: project.idealTaskCount,
             ...role,
             tasks: {
                 total: sprintId ? await prisma.tasks.count({
                     where: {
-                        Task_User:{
-                            some:{
-                                user_id:userId,
+                        Task_User: {
+                            some: {
+                                user_id: userId,
                             }
                         },
                         sprint: {
@@ -196,19 +196,27 @@ export const userProfileAnalytics = async (req, res) => {
                     }
                 }) : await prisma.tasks.count({
                     where: {
-                        Task_User:{
-                            some:{
-                                user_id:userId,
+                        Task_User: {
+                            some: {
+                                user_id: userId,
                             }
                         }
                     }
                 }),
-                completed:await userTaskCountByStatus(parseInt(projectId), userId, sprintId,'Completed') ,
-                inProgress:await userTaskCountByStatus(parseInt(projectId), userId,sprintId, 'In_Progress'),
-                todo: await userTaskCountByStatus(parseInt(projectId), userId, sprintId,'To_Do'),
+                completed: await userTaskCountByStatus(parseInt(projectId), userId, sprintId, 'Completed'),
+                inProgress: await userTaskCountByStatus(parseInt(projectId), userId, sprintId, 'In_Progress'),
+                todo: await userTaskCountByStatus(parseInt(projectId), userId, sprintId, 'To_Do'),
                 bugs: totalBugs,
-
-            }
+            },
+            sprints: await prisma.sprint.findMany({
+                where: {
+                    project_id: parseInt(projectId)
+                },
+                select: {
+                    id: true,
+                    name: true
+                }
+            })
         }
         res.status(200).json({details})
     } catch (error) {

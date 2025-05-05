@@ -257,3 +257,35 @@ export const getAllComments = async (req, res) => {
         res.status(400).send({message: 'Error fetching all comments'});
     }
 }
+
+export const deleteComment = async (req, res) => {
+    try {
+        const {taskId, commentId} = req.params;
+        
+        const comment = await prisma.task_Comment.findUnique({
+            where: {
+                id: parseInt(commentId),
+    
+            }
+        });
+
+        if (!comment) {
+            return res.status(404).send({message: 'Comment not found'});
+        }
+
+        if (comment.user_id !== req.userId) {
+            return res.status(403).send({message: 'You are not authorized to delete this comment'});
+        }
+
+        await prisma.task_Comment.delete({
+            where: {
+                id: parseInt(commentId)
+            }
+        });
+
+        return res.status(200).send({message: 'Comment deleted successfully'});
+    } catch (err) {
+        console.error("Error in deleteComment:", err);
+        res.status(400).send({message: 'Error deleting comment'});
+    }
+}
