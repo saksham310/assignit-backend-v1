@@ -605,6 +605,16 @@ export const updateMemberRole = async (req, res) => {
                     project_id: parseInt(projectId)
                 }
             });
+            await prisma.task_User.deleteMany({
+                where: {
+                    user_id: parseInt(memberId),
+                    task: {
+                        sprint: {
+                            project_id: parseInt(projectId)
+                        }
+                    }
+                }
+            })
         return res.status(200).json({message: 'Successfully removed member'})
         }
         await prisma.project_User.update({

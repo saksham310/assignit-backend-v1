@@ -49,7 +49,26 @@ export const updateUser = async (req, res) => {
     }
 }
 
-const userTaskCountByStatus = async (id, userId, statusType) => {
+const userTaskCountByStatus = async (id, userId, sprintId,statusType) => {
+    if(sprintId) {
+        const count = await prisma.tasks.count({
+            where: {
+                sprint: {
+                    project_id: id,
+                    id: parseInt(sprintId),
+                },
+                Task_User: {
+                    some: {
+                        user_id: userId,
+                    },
+                },
+                status: {
+                    type: statusType
+                }
+            }
+        });
+        return count
+    }
     const count = await prisma.tasks.count({
         where: {
             sprint: {
@@ -68,17 +87,9 @@ const userTaskCountByStatus = async (id, userId, statusType) => {
     return count;
 }
 
-const userTaskCountByPriority = async (priority) => {
-    const count = await prisma.tasks.count({
-        where: {
-            priority: priority
-        }
-    })
-    return count;
-}
 export const userProfileAnalytics = async (req, res) => {
     try {
-        const {projectId,id} = req.params;
+        const {projectId,id,sprintId} = req.params;
         const userId = parseInt(id)
         const sprint = await prisma.sprint.count({
             where: {
@@ -108,25 +119,50 @@ export const userProfileAnalytics = async (req, res) => {
                     role:true
                 }
             })
-        const taskUsers = await prisma.task_User.findMany({
-            where: {
-                user_id: userId,
-                task: {
-                    sprint: {
-                        project_id: parseInt(projectId),
+        let taskUsers
+        if(sprintId){
+            taskUsers = await prisma.task_User.findMany({
+                where: {
+                    user_id: userId,
+                    task: {
+                        sprint: {
+                            project_id: parseInt(projectId),
+                            id: parseInt(sprintId)
+                        },
                     },
                 },
-            },
-            select: {
-                task: {
-                    select: {
-                        frontendBugCount: true,
-                        backendBugCount: true,
-                        databaseBugCount: true,
+                select: {
+                    task: {
+                        select: {
+                            frontendBugCount: true,
+                            backendBugCount: true,
+                            databaseBugCount: true,
+                        },
                     },
                 },
-            },
-        });
+            });
+        }
+      else {
+            taskUsers = await prisma.task_User.findMany({
+                where: {
+                    user_id: userId,
+                    task: {
+                        sprint: {
+                            project_id: parseInt(projectId),
+                        },
+                    },
+                },
+                select: {
+                    task: {
+                        select: {
+                            frontendBugCount: true,
+                            backendBugCount: true,
+                            databaseBugCount: true,
+                        },
+                    },
+                },
+            });
+        }
 
         const totalBugs = taskUsers.reduce((acc, { task }) => {
             if (!task) return acc;
@@ -147,7 +183,18 @@ export const userProfileAnalytics = async (req, res) => {
             idealTaskCount:project.idealTaskCount,
             ...role,
             tasks: {
-                total: await prisma.tasks.count({
+                total: sprintId ? await prisma.tasks.count({
+                    where: {
+                        Task_User:{
+                            some:{
+                                user_id:userId,
+                            }
+                        },
+                        sprint: {
+                            id: parseInt(sprintId)
+                        }
+                    }
+                }) : await prisma.tasks.count({
                     where: {
                         Task_User:{
                             some:{
@@ -156,9 +203,9 @@ export const userProfileAnalytics = async (req, res) => {
                         }
                     }
                 }),
-                completed:await userTaskCountByStatus(parseInt(projectId), userId, 'Completed') ,
-                inProgress:await userTaskCountByStatus(parseInt(projectId), userId, 'In_Progress'),
-                todo: await userTaskCountByStatus(parseInt(projectId), userId, 'To_Do'),
+                completed:await userTaskCountByStatus(parseInt(projectId), userId, sprintId,'Completed') ,
+                inProgress:await userTaskCountByStatus(parseInt(projectId), userId,sprintId, 'In_Progress'),
+                todo: await userTaskCountByStatus(parseInt(projectId), userId, sprintId,'To_Do'),
                 bugs: totalBugs,
 
             }
