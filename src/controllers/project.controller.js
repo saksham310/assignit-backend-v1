@@ -509,6 +509,7 @@ export const projectRetrospective = async (req, res) => {
                     select: {
                         id: true,
                         name: true,
+                        endDate:true
                     }
                 },
                 users: {
