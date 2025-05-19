@@ -137,9 +137,6 @@ export const updateStatus = async (req, res) => {
 }
 export const getProjects = async (req, res) => {
     const {workspaceId} = req.params;
-    // if (!workspaceId || isNaN(parseInt(workspaceId))) {
-    //     return res.status(200).send([]);
-    // }
     try {
         const projects = await prisma.project.findMany({
             where: {
@@ -175,7 +172,7 @@ export const getProjects = async (req, res) => {
         return res.status(200).send(projectsWithTaskCounts)
     } catch (err) {
         console.error(err);
-        return res.status(500).send({message: 'Failed to get projects'});
+        return res.status(500).send({message: 'No projects found'});
     }
 }
 
