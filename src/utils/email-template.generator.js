@@ -19,7 +19,7 @@ export const generateResetPasswordEmail = (userName, otp) => {
 };
 
 export const generateWorkspaceInviteEmail = (workspace) => {
-    const url = `http://localhost:5173/invite/${workspace.inviteCode}?name=${workspace.name}`;
+    const url = `https://assignit-frontend.vercel.app/invite/${workspace.inviteCode}?name=${workspace.name}`;
     console.log(url);
     return {
         body: {
