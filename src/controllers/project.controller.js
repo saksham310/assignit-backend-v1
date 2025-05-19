@@ -172,7 +172,7 @@ export const getProjects = async (req, res) => {
         return res.status(200).send(projectsWithTaskCounts)
     } catch (err) {
         console.error(err);
-        return res.status(500).send({message: 'Failed to get projects'});
+        return res.status(500).send({message: 'No projects found'});
     }
 }
 
