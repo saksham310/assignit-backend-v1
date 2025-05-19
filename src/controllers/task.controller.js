@@ -208,7 +208,7 @@ export const updateTask = async (req, res) => {
 
 export const addComment = async (req, res) => {
     try{
-        const {message,type,comment_id} = req.body;
+        const {message,type,comment_id,existing_attachment} = req.body;
         const {id} = req.params;
         let attachment;
         if(req.file){
@@ -223,7 +223,7 @@ export const addComment = async (req, res) => {
                 data:{
                     message,
                     type,
-                    attachment:attachment ?? null,
+                    attachment:attachment ?? existing_attachment ?? null,
                 }
             })
             return res.status(200).send({message: 'Comment updated successfully',comment});
