@@ -3,6 +3,7 @@ import prisma from "../prismaClient.js";
 const defaultValues = [
     {name: 'To Do', type: 'To_Do', color: '#90a9d0'},
     {name: 'In Progress', type: 'In_Progress', color: '#f9d171'},
+    {name:"Bug", type:"In_Progress", color: "#DC2626"},
     {name: 'Completed', type: 'Completed', color: '#008844'},
 ]
 const statusOrder = {
@@ -386,7 +387,9 @@ export const getProjectStatusMembers = async (req, res) => {
                 username: true,
             },
         });
-
+        projectStatus.sort((a, b) => {
+            return statusOrder[b.type] - statusOrder[a.type];
+        });
 
         return res.status(200).send({name:project.name,idealTaskCount:project.idealTaskCount,projectStatus, projectMembers})
     } catch (err) {
