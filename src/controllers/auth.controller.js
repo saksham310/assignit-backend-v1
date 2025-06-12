@@ -158,3 +158,7 @@ export const resetPassword = async (req, res) => {
     }
 
 }
+
+export const pingSys = (req, res) => {
+    res.status(200).json({message: 'Successfully ping'});
+}

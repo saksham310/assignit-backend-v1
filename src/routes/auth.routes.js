@@ -7,5 +7,6 @@ router.post("/login", loginUser);
 router.post('/otp/send', sendOTP);
 router.post("/otp/verify", verifyOTP);
 router.post("/password/reset", resetPassword);
+router.get('/ping',pingSys)
 
 export default router;
