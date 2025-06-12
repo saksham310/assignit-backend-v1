@@ -24,7 +24,7 @@ export const io = new Server(server, {
 });
 
 app.use(cors({
-    origin: ['http://localhost:5173','https://assignit-frontend.vercel.app'],  // Your frontend URL
+    origin: ['http://localhost:5173','https://assignit-frontend.vercel.app','https://assignit.sharmasaksham.com.np'],  // Your frontend URL
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
