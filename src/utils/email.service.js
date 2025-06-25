@@ -5,7 +5,7 @@ import 'dotenv/config';
 export const sendEmail = (subject, emailTemplate, to) => {
     const emailBody = mailGenerator.generate(emailTemplate);
     const mailOptions = {
-        from: process.env.EMAIL_FROM,
+        from: `"AssignIt" <${process.env.EMAIL_FROM}>`,
         to: to,
         subject: subject,
         html: emailBody,
