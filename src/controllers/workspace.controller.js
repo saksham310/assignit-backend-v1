@@ -88,137 +88,84 @@ export const getWorkspaces = async (req, res) => {
 
 export const deleteWorkspace = async (req, res) => {
     try {
-        const workspaceId = parseInt(req.params.workspaceId);
-        const workspace = await prisma.workspace.findUnique(
-            {
-                where: {
-                    id: workspaceId,
-                }
-            });
-        if (!workspace) {
-            return res.status(404).json({message: 'Workspace not found'});
-        }
-        if (!req.isOwner) {
-            return res.status(403).json({message: 'You are not authorized to delete this workspace'});
-        }
-        
-        // Delete everything in a transaction to ensure consistency
-        await prisma.$transaction(async (prisma) => {
-            // Get all projects in this workspace for cascading deletion
-            const projects = await prisma.project.findMany({
-                where: {
-                    workspace_id: workspaceId
-                },
-                select: {
-                    id: true
-                }
-            });
-            
-            const projectIds = projects.map(p => p.id);
-            
-            // Delete task comments
-            await prisma.task_Comment.deleteMany({
-                where: {
-                    task: {
-                        sprint: {
-                            project_id: {
-                                in: projectIds
-                            }
-                        }
-                    }
-                }
-            });
-            
-            // Delete task-user relationships
-            await prisma.task_User.deleteMany({
-                where: {
-                    task: {
-                        sprint: {
-                            project_id: {
-                                in: projectIds
-                            }
-                        }
-                    }
-                }
-            });
-            
-            // Delete tasks
-            await prisma.tasks.deleteMany({
-                where: {
-                    sprint: {
-                        project_id: {
-                            in: projectIds
-                        }
-                    }
-                }
-            });
-            
-            // Delete sprint retrospective feedback
-            await prisma.sprint_Feedback.deleteMany({
-                where: {
-                    sprint: {
-                        project_id: {
-                            in: projectIds
-                        }
-                    }
-                }
-            });
-            
-            // Delete sprints
-            await prisma.sprint.deleteMany({
-                where: {
-                    project_id: {
-                        in: projectIds
-                    }
-                }
-            });
-            
-            // Delete project statuses
-            await prisma.status.deleteMany({
-                where: {
-                    project_id: {
-                        in: projectIds
-                    }
-                }
-            });
-            
-            // Delete project users
-            await prisma.project_User.deleteMany({
-                where: {
-                    project_id: {
-                        in: projectIds
-                    }
-                }
-            });
-            
-            // Delete projects
-            await prisma.project.deleteMany({
-                where: {
-                    workspace_id: workspaceId
-                }
-            });
-            
-            // Delete workspace users
-            await prisma.workspace_User.deleteMany({
-                where: {
-                    workspace_id: workspaceId
-                }
-            });
-            
-            // Finally delete the workspace
-            await prisma.workspace.delete({
-                where: {
-                    id: workspaceId
-                }
-            });
+        const workspaceId = parseInt(req.params.workspaceId, 10);
+
+        const workspace = await prisma.workspace.findUnique({
+            where: { id: workspaceId }
         });
 
-        return res.status(200).json({message: 'Workspace deleted successfully'});
+        if (!workspace) {
+            return res.status(404).json({ message: "Workspace not found" });
+        }
+
+        if (!req.isOwner) {
+            return res
+                .status(403)
+                .json({ message: "You are not authorized to delete this workspace" });
+        }
+
+        // Get all project IDs in the workspace
+        const projects = await prisma.project.findMany({
+            where: { workspace_id: workspaceId },
+            select: { id: true }
+        });
+
+        const projectIds = projects.map(p => p.id);
+
+        // Build an array of deletion queries
+        const queries = [];
+
+        if (projectIds.length > 0) {
+            // Delete all dependent project data
+            queries.push(
+                prisma.task_Comment.deleteMany({
+                    where: { task: { sprint: { project_id: { in: projectIds } } } }
+                }),
+                prisma.task_User.deleteMany({
+                    where: { task: { sprint: { project_id: { in: projectIds } } } }
+                }),
+                prisma.tasks.deleteMany({
+                    where: { sprint: { project_id: { in: projectIds } } }
+                }),
+                prisma.sprint_Feedback.deleteMany({
+                    where: { sprint: { project_id: { in: projectIds } } }
+                }),
+                prisma.sprint.deleteMany({
+                    where: { project_id: { in: projectIds } }
+                }),
+                prisma.status.deleteMany({
+                    where: { project_id: { in: projectIds } }
+                }),
+                prisma.project_User.deleteMany({
+                    where: { project_id: { in: projectIds } }
+                }),
+                prisma.project.deleteMany({
+                    where: { workspace_id: workspaceId }
+                })
+            );
+        }
+
+        // Delete workspace users
+        queries.push(
+            prisma.workspace_User.deleteMany({ where: { workspace_id: workspaceId } })
+        );
+
+        // Delete the workspace itself
+        queries.push(prisma.workspace.delete({ where: { id: workspaceId } }));
+
+        // Execute all deletions in a single batch transaction
+        await prisma.$transaction(queries);
+
+        return res.status(200).json({ message: "Workspace deleted successfully" });
     } catch (e) {
-        console.log(e);
-        return res.status(500).json({ message: 'Something went wrong, please try again later', error: e.message });
+        console.error(e);
+        return res.status(500).json({
+            message: "Something went wrong, please try again later",
+            error: e.message
+        });
     }
-}
+};
+
 
 export const getWorkSpaceAnalytics = async (req, res) => {
     try {
