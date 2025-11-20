@@ -17,7 +17,7 @@ const server = http.createServer(app);
 
 export const io = new Server(server, {
     cors: {
-        origin: ['http://localhost:5173','https://assignit-frontend.vercel.app'], // frontend URL
+        origin: ['http://localhost:5173','https://assignit-frontend.vercel.app','https://assignit.sharmasaksham.com.np'], // frontend URL
         methods: ['GET', 'POST', 'PUT', 'DELETE'],
         credentials: true,
     },
