@@ -15,16 +15,20 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const server = http.createServer(app);
 
+const corsOrigins = process.env.CORS_ORIGINS 
+    ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
+    : ['http://localhost:5173'];
+
 export const io = new Server(server, {
     cors: {
-        origin: ['http://localhost:5173','https://assignit-frontend.vercel.app','https://assignit.sharmasaksham.com.np'], // frontend URL
+        origin: corsOrigins,
         methods: ['GET', 'POST', 'PUT', 'DELETE'],
         credentials: true,
     },
 });
 
 app.use(cors({
-    origin: ['http://localhost:5173','https://assignit-frontend.vercel.app','https://assignit.sharmasaksham.com.np'],  // Your frontend URL
+    origin: corsOrigins,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));

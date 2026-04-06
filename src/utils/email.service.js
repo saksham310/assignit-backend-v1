@@ -4,8 +4,11 @@ import 'dotenv/config';
 
 export const sendEmail = (subject, emailTemplate, to) => {
     const emailBody = mailGenerator.generate(emailTemplate);
+    const fromName = process.env.MAIL_FROM_NAME || "AssignIt";
+    const fromAddress = process.env.MAIL_FROM_ADDRESS || process.env.SMTP_USERNAME;
+    
     const mailOptions = {
-        from: `"AssignIt" <${process.env.EMAIL_FROM}>`,
+        from: `"${fromName}" <${fromAddress}>`,
         to: to,
         subject: subject,
         html: emailBody,

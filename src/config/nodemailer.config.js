@@ -1,21 +1,14 @@
 import nodemailer from "nodemailer";
 import 'dotenv/config';
 
-// export const transporter =nodemailer.createTransport({
-//     host: "sandbox.smtp.mailtrap.io",
-//     port: 587,
-//     auth: {
-//         user: "8782c179d4e908",
-//         pass: "5219ccc4bc0079"
-//     }
-// });
-
+// Create transporter with environment-based configuration
+// Supports both secure (TLS/SSL) and non-secure connections
 export const transporter = nodemailer.createTransport({
-    host: "smtp.zoho.com",
-    port: 465,
-    secure: true, // use TLS
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || "587"),
+    secure: process.env.SMTP_SECURE === 'true' || process.env.SMTP_PORT === '465', // true for 465, false for other ports
     auth: {
-        user: process.env.EMAIL_FROM,
-        pass: process.env.ZOHO_APP_PASSWORD,
+        user: process.env.SMTP_USERNAME,
+        pass: process.env.SMTP_PASSWORD,
     }
-})
+});
