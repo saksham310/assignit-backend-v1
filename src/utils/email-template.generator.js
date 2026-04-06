@@ -49,7 +49,7 @@ export const generateResetPasswordEmail = (userName, otp) => {
 };
 
 export const generateWorkspaceInviteEmail = (workspace) => {
-    const url = `http://localhost:5173/invite/${workspace.inviteCode}?name=${encodeURIComponent(workspace.name)}`;
+    const url = `https://pm.gyanbazzar.com/error/invite/${workspace.inviteCode}?name=${encodeURIComponent(workspace.name)}`;
 
     return {
         body: {
