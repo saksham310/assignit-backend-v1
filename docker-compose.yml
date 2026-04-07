@@ -1,16 +1,16 @@
 version: '3.8'
 
 services:
+
   assignit_backend:
     image: node:20
-#    build: .
     container_name: assignit_backend
     restart: unless-stopped
     working_dir: /app
     volumes:
       - ./:/app
     ports:
-      - "3092:8080"
+      - 3092:8081
     depends_on:
       - assignit_db
     command: ["npm", "start"]
@@ -25,8 +25,8 @@ services:
       - POSTGRES_DB=assignit
     volumes:
       - assignit_postgres_data:/var/lib/postgresql
-    expose:
-      - "5432"
+    ports:
+      - 7898:5432
 
 volumes:
   assignit_postgres_data:
